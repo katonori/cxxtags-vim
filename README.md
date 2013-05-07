@@ -3,7 +3,7 @@ cxxtags-vim
 
 What is this?
 ------
-**cxxtags-vim** is vim front-end for cxxtags. This script perform these features.
+**cxxtags-vim** is vim front-end for cxxtags. This script performs these features.
 
 * Jump to a declaration
 * Jump to a definition
