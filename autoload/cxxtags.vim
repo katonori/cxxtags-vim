@@ -1,11 +1,4 @@
 "
-" variable declarations which configure the behavior of this script
-"
-let g:CXXTAGS_MsgBufName = "cxxtags_msg"
-let g:CXXTAGS_Cmd = "cxxtags_query"
-let g:CXXTAGS_DatabaseDir = "./db"
-
-"
 " goto the head of a word.
 "
 function! s:gotoHead()
@@ -218,4 +211,4 @@ function! cxxtags#CloseMsgBuf()
     exec "normal zz"
 endfunction
 
-
+command! -nargs=0 CxxtagsTagJump :call cxxtags#TagJump()
