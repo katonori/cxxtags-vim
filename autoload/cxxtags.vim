@@ -31,6 +31,17 @@ function! s:gotoHead()
 endfunction
 
 "
+" check database directory
+"
+function! s:checkDatabaseDir()
+    if isdirectory(g:CXXTAGS_DatabaseDir)
+        return 0
+    endif
+    echo "ERROR: cxxtags database \"" . g:CXXTAGS_DatabaseDir . "\" is not found."
+    return 1
+endfunction
+
+"
 " get current position
 "
 let s:curSrcFilename = ""
@@ -47,6 +58,9 @@ endfunction
 " jump to a declaration
 "
 function! cxxtags#JumpToDeclaration()
+    if 0 != s:checkDatabaseDir()
+        return
+    endif
     call s:gotoHead()
     call s:getCurPos()
 
@@ -54,7 +68,7 @@ function! cxxtags#JumpToDeclaration()
     let l:result = substitute(system(l:cmd), "\n", "", "g")
     let l:resultList = split(l:result, "|")
     if len(l:resultList) == 0
-        echo "decl not found"
+        echo "Declaration is not found."
     else
         execute ":e " . l:resultList[0]
         call cursor(l:resultList[1], l:resultList[2])
@@ -66,6 +80,9 @@ endfunction
 " jump to a definition
 "
 function! cxxtags#JumpToDefinition()
+    if 0 != s:checkDatabaseDir()
+        return
+    endif
     call s:gotoHead()
     call s:getCurPos()
 
@@ -73,7 +90,7 @@ function! cxxtags#JumpToDefinition()
     let l:result = substitute(system(l:cmd), "\n", "", "g")
     let l:resultList = split(l:result, "|")
     if len(l:resultList) == 0
-        echo "def not found"
+        echo "Definition is not found."
     else
         execute ":e " . l:resultList[0]
         call cursor(l:resultList[1], l:resultList[2])
@@ -101,6 +118,9 @@ let s:winNumSrcFile = 0
 " print all references to a message buffer
 "
 function! cxxtags#PrintAllReferences()
+    if 0 != s:checkDatabaseDir()
+        return
+    endif
     call s:gotoHead()
     call s:getCurPos()
 
@@ -153,7 +173,7 @@ function! cxxtags#PrintAllReferences()
     endwhile
 
     if len(l:msg) == 0
-        echo "reference not found"
+        echo "No references are found."
     else
         let s:winNumMsgBuf = bufwinnr(g:CXXTAGS_MsgBufName)
         let s:winNumSrcFile = winnr()
