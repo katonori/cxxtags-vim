@@ -32,6 +32,9 @@ Commands
 
 Default key maps
 ------
+
+### Normal mode
+
 | Map          | Command            |
 | ------------ | ------------------ |
 |\<leader\>d   | CxxtagsOpenDecl    |
@@ -40,6 +43,14 @@ Default key maps
 |\<leader\>o   | CxxtagsListOverride    |
 |\<leader\>O   | CxxtagsListOverriden   |
 |\<leader\>c   | CxxtagsCloseMsgBuf |
+
+### Message Buffer
+You can also use keys below in a message buffer.
+
+| Map          | Description            |
+| ------------ | ------------------ |
+|\<CR\> | Display a location a listed item mentions about. |
+|q | Close the message buffer. |
 
 Variables
 ------
