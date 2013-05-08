@@ -26,7 +26,7 @@
 "
 " goto the head of a word.
 "
-function! s:gotoHead()
+function! s:gotoHeadOfItem()
     execute ":normal wb"
 endfunction
 
@@ -47,55 +47,51 @@ endfunction
 let s:curSrcFilename = ""
 let s:curSrcLineNo = -1
 let s:curSrcColNo = -1
+let s:curSrcLine = ""
+let s:curWord = ""
 function! s:getCurPos()
+    call s:gotoHeadOfItem()
     let s:curSrcFilename = expand("%:p")
+    let s:curSrcLine = getline(".")
     let l:pos = getpos(".")
     let s:curSrcLineNo = l:pos[1]
     let s:curSrcColNo = l:pos[2]
+    let s:curWord = matchstr(s:curSrcLine, '^\zs[a-zA-Z0-9_]\+\ze', s:curSrcColNo-1)
+endfunction
+
+"
+" jump to a tag
+"
+function! s:jumpToTag(table, kind)
+    if 0 != s:checkDatabaseDir()
+        return
+    endif
+    call s:getCurPos()
+
+    let l:cmd = g:CXXTAGS_Cmd . " " . a:table . " " . g:CXXTAGS_DatabaseDir . " " . s:curSrcFilename . " " . s:curSrcLineNo . " " . s:curSrcColNo
+    let l:result = substitute(system(l:cmd), "\n", "", "g")
+    let l:resultList = split(l:result, "|")
+    if len(l:resultList) == 0
+        echo a:kind . " is not found.: " . s:curWord
+    else
+        execute ":e " . l:resultList[0]
+        call cursor(l:resultList[1], l:resultList[2])
+        execute ":normal zz"
+    endif
 endfunction
 
 "
 " jump to a declaration
 "
 function! cxxtags#JumpToDeclaration()
-    if 0 != s:checkDatabaseDir()
-        return
-    endif
-    call s:gotoHead()
-    call s:getCurPos()
-
-    let l:cmd = g:CXXTAGS_Cmd . " decl " . g:CXXTAGS_DatabaseDir . " " . s:curSrcFilename . " " . s:curSrcLineNo . " " . s:curSrcColNo
-    let l:result = substitute(system(l:cmd), "\n", "", "g")
-    let l:resultList = split(l:result, "|")
-    if len(l:resultList) == 0
-        echo "Declaration is not found."
-    else
-        execute ":e " . l:resultList[0]
-        call cursor(l:resultList[1], l:resultList[2])
-        execute ":normal zz"
-    endif
+    call s:jumpToTag("decl", "Declaration")
 endfunction
 
 "
 " jump to a definition
 "
 function! cxxtags#JumpToDefinition()
-    if 0 != s:checkDatabaseDir()
-        return
-    endif
-    call s:gotoHead()
-    call s:getCurPos()
-
-    let l:cmd = g:CXXTAGS_Cmd . " def " . g:CXXTAGS_DatabaseDir . " " . s:curSrcFilename . " " . s:curSrcLineNo . " " . s:curSrcColNo
-    let l:result = substitute(system(l:cmd), "\n", "", "g")
-    let l:resultList = split(l:result, "|")
-    if len(l:resultList) == 0
-        echo "Definition is not found."
-    else
-        execute ":e " . l:resultList[0]
-        call cursor(l:resultList[1], l:resultList[2])
-        execute ":normal zz"
-    endif
+    call s:jumpToTag("def", "Definition")
 endfunction
 
 "
@@ -115,16 +111,15 @@ endfunction
 let s:winNumMsgBuf = 0
 let s:winNumSrcFile = 0
 "
-" print all references to a message buffer
+" list query results
 "
-function! cxxtags#PrintAllReferences()
+function! cxxtags#PrintAllResults(table, kind)
     if 0 != s:checkDatabaseDir()
         return
     endif
-    call s:gotoHead()
     call s:getCurPos()
 
-    let l:cmd = g:CXXTAGS_Cmd . " ref " . g:CXXTAGS_DatabaseDir . " " . s:curSrcFilename . " " . s:curSrcLineNo . " " . s:curSrcColNo
+    let l:cmd = g:CXXTAGS_Cmd . " " . a:table . " " . g:CXXTAGS_DatabaseDir . " " . s:curSrcFilename . " " . s:curSrcLineNo . " " . s:curSrcColNo
     let l:resultList = split(system(l:cmd), "\n")
     let l:maxFileNameLen = 0
     let l:maxLineNoLen = 0
@@ -173,7 +168,7 @@ function! cxxtags#PrintAllReferences()
     endwhile
 
     if len(l:msg) == 0
-        echo "No references are found."
+        echo "No " . a:kind . " are found.: " . s:curWord
     else
         let s:winNumMsgBuf = bufwinnr(g:CXXTAGS_MsgBufName)
         let s:winNumSrcFile = winnr()
@@ -184,6 +179,27 @@ function! cxxtags#PrintAllReferences()
         " output message
         call s:updateMsgBuf(l:msg)
     endif
+endfunction
+
+"
+" print all references to a message buffer
+"
+function! cxxtags#PrintAllReferences()
+    call cxxtags#PrintAllResults("ref", "references")
+endfunction
+
+"
+" print all the items overriden by the item under the cursor.
+"
+function! cxxtags#PrintAllOverrideNs()
+    call cxxtags#PrintAllResults("overriden", "overridens")
+endfunction
+
+"
+" print all the items overrides the item under the cursor.
+"
+function! cxxtags#PrintAllOverrides()
+    call cxxtags#PrintAllResults("override", "overrides")
 endfunction
 
 "
@@ -218,14 +234,14 @@ function! s:openMsgBuf()
     setlocal nonumber
     let s:winNumMsgBuf = bufwinnr(g:CXXTAGS_MsgBufName)
     let s:winNumSrcFile = winnr("#")
-    "nnoremap <buffer> c <C-W>c
     nnoremap <buffer> <CR> :CxxtagsTagJump<CR>
+    nnoremap <buffer> q <C-W>czz
 endfunction
 
 "
 " perform tag jump
 "
-function! cxxtags#TagJump()
+function! cxxtags#TagJumpFromMsgBuf()
     let l:pos = getpos(".")
     let l:lineNo = l:pos[1]
     if l:lineNo == 1
@@ -256,4 +272,4 @@ function! cxxtags#CloseMsgBuf()
     exec "normal zz"
 endfunction
 
-command! -nargs=0 CxxtagsTagJump :call cxxtags#TagJump()
+command! -nargs=0 CxxtagsTagJump :call cxxtags#TagJumpFromMsgBuf()

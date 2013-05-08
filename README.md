@@ -8,6 +8,7 @@ What is this?
 * Jump to a declaration
 * Jump to a definition
 * List all the references
+* List all the overrides/overriden information
 
 Requirement
 ------
@@ -22,9 +23,11 @@ Commands
 ------
 |Name              | Description |
 | ---------------- | ------------------- |
-|CxxtagsOpenDecl   | Jump to the declaration of a item under the cursor.|
-|CxxtagsOpenDef    | Jump to the definition of a item under the cursor.|
-|CxxtagsListRefs   | List all the references to a item under the cursor to the message buffer.|
+|CxxtagsOpenDecl   | Jump to the declaration of an item under the cursor.|
+|CxxtagsOpenDef    | Jump to the definition of an item under the cursor.|
+|CxxtagsListRefs   | List all the references to an item under the cursor to the message buffer.|
+|CxxtagsListOverride  | List all the items which an item under the cursor overrides.|
+|CxxtagsListOverriden | List all the items overriden by an item under the cursor.|
 |CxxtagsCloseMsgBuf| Close the message buffer. |
 
 Default key maps
@@ -34,6 +37,8 @@ Default key maps
 |\<leader\>d   | CxxtagsOpenDecl    |
 |\<leader\>D   | CxxtagsOpenDef     |
 |\<leader\>r   | CxxtagsListRefs    |
+|\<leader\>o   | CxxtagsListOverride    |
+|\<leader\>O   | CxxtagsListOverriden   |
 |\<leader\>c   | CxxtagsCloseMsgBuf |
 
 Variables
