@@ -215,6 +215,7 @@ endfunction
 "
 function! s:updateMsgBuf(inMsg)
     setlocal modifiable
+    setlocal noreadonly
     silent! %delete _
     let l:msg = sort(a:inMsg)
     let l:firstLine = ["[go back]"]
@@ -222,6 +223,7 @@ function! s:updateMsgBuf(inMsg)
     call append(1, l:msg)
     exec "0"
     setlocal nomodifiable
+    setlocal readonly
 endfunction
 
 "
