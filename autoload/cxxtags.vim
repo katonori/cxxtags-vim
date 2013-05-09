@@ -270,7 +270,6 @@ endfunction
 function! cxxtags#CloseMsgBuf()
     exec s:winNumMsgBuf . "wincmd c"
     exec s:winNumSrcFile . "wincmd w"
-    exec "normal zz"
 endfunction
 
 command! -nargs=0 CxxtagsTagJump :call cxxtags#TagJumpFromMsgBuf()
