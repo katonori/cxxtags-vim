@@ -1,5 +1,5 @@
 test: db
-	env VIMRUNTIME=../ vim -R --noplugin -u NONE inhe.cpp -S test.vim
+	env vim -R --noplugin -u NONE inhe.cpp -S test.vim
 db:
 	cxxtags inhe.cpp -o inhe.db
 	cxxtags_merger db inhe.db
