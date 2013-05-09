@@ -235,9 +235,8 @@ function! s:openMsgBuf()
     execute "set filetype=cpp"
     setlocal nonumber
     let s:winNumMsgBuf = bufwinnr(g:CXXTAGS_MsgBufName)
-    let s:winNumSrcFile = winnr("#")
     nnoremap <buffer> <CR> :CxxtagsTagJump<CR>
-    nnoremap <buffer> q <C-W>czz
+    nnoremap <buffer> q :call cxxtags#CloseMsgBuf()<CR>
 endfunction
 
 "
@@ -269,8 +268,8 @@ endfunction
 " close a message buffer
 "
 function! cxxtags#CloseMsgBuf()
-    exec s:winNumMsgBuf . "wincmd w"
-    exec "wincmd c"
+    exec s:winNumMsgBuf . "wincmd c"
+    exec s:winNumSrcFile . "wincmd w"
     exec "normal zz"
 endfunction
 
