@@ -78,6 +78,7 @@ function! s:init()
     call add(s:refDatasOverrideN, l:tmpList)
 
     exec "redir! > test.log"
+    exec "set runtimepath=../"
     exec "source ../plugin/cxxtags.vim"
 endfunction
 
@@ -137,9 +138,41 @@ function! s:testList(cmd, inDatas, refDatas)
             let l:ln += 1
         endwhile
         " close buffer
-        exec "wincmd c"
+        exec "CxxtagsCloseMsgBuf"
         let l:i += 1
     endwhile
+endfunction
+
+function! s:testCloseOne()
+    let l:winNrOld = winnr()
+    call cursor(s:testPos.line, s:testPos.col)
+    exec "CxxtagsListRefs"
+    exec "CxxtagsCloseMsgBuf"
+    let l:winNrNew = winnr()
+    if l:winNrOld != l:winNrNew
+        echo "NG: close"
+        let s:err += 1
+    else
+        echo "OK: close"
+    endif
+endfunction
+
+function! s:testClose()
+    let s:testPos = { 'line':8, 'col':18 }
+
+    " one window
+    call s:testCloseOne()
+
+    " upper window
+    exec "sp"
+    call s:testCloseOne()
+    exec "wincmd c"
+
+    " lower window
+    exec "sp"
+    exec "2wincmd w"
+    call s:testCloseOne()
+    exec "wincmd c"
 endfunction
 
 let s:err = 0
@@ -156,6 +189,8 @@ function! s:run()
     call s:testList("CxxtagsListOverride", s:inDatasOverride, s:refDatasOverride)
     " overriden test
     call s:testList("CxxtagsListOverriden", s:inDatasOverrideN, s:refDatasOverrideN)
+    " close test
+    call s:testClose()
 
     if s:err != 0
         exec "cq"
