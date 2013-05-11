@@ -23,6 +23,11 @@
 " ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 " DAMAGE.
 
+let s:COL_NAME = 0
+let s:COL_FILE_NAME = 1
+let s:COL_LINE_NO = 2
+let s:COL_COL_NO = 3
+
 "
 " goto the head of a word.
 "
@@ -74,8 +79,8 @@ function! s:jumpToTag(table, kind)
     if len(l:resultList) == 0
         echo a:kind . " is not found.: " . s:curWord
     else
-        execute ":e " . l:resultList[0]
-        call cursor(l:resultList[1], l:resultList[2])
+        execute ":e " . l:resultList[s:COL_FILE_NAME]
+        call cursor(l:resultList[s:COL_LINE_NO], l:resultList[s:COL_COL_NO])
         execute ":normal zz"
     endif
 endfunction
@@ -132,26 +137,26 @@ function! cxxtags#PrintAllResults(table, kind)
     for l:result in resultList
         let l:columns = split(l:result, "|")
         " get a line from a source file
-        let l:lineBuf = readfile(l:columns[0])
-        let l:lineOfSrc = l:lineBuf[l:columns[1]-1]
+        let l:lineBuf = readfile(l:columns[s:COL_FILE_NAME])
+        let l:lineOfSrc = l:lineBuf[l:columns[s:COL_LINE_NO]-1]
 
         " keep the max number for printing
-        let l:len = strlen(l:columns[0])
+        let l:len = strlen(l:columns[s:COL_FILE_NAME])
         if l:len > l:maxFileNameLen
             let l:maxFileNameLen = l:len
         endif
-        let l:len = str2nr(l:columns[1], 10)
+        let l:len = str2nr(l:columns[s:COL_LINE_NO], 10)
         if l:len > l:maxLineNoLen
             let l:maxLineNoLen = l:len
         endif
-        let l:len = str2nr(l:columns[2], 10)
+        let l:len = str2nr(l:columns[s:COL_COL_NO], 10)
         if l:len > l:maxColNoLen
             let l:maxColNoLen = l:len
         endif
 
-        call add(l:fileList, l:columns[0])
-        call add(l:lineNoList, l:columns[1])
-        call add(l:colNoList, l:columns[2])
+        call add(l:fileList, l:columns[s:COL_FILE_NAME])
+        call add(l:lineNoList, l:columns[s:COL_LINE_NO])
+        call add(l:colNoList, l:columns[s:COL_COL_NO])
         call add(l:lineOfSrcList, l:lineOfSrc)
     endfor
 
