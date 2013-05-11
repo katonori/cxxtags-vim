@@ -12,7 +12,7 @@ What is this?
 
 Requirement
 ------
-**cxxtags** ver2.0b or higher.
+**cxxtags** ver2.0.
 
 How to install
 ------
