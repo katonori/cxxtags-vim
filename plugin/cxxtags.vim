@@ -39,6 +39,7 @@ command! -nargs=0 CxxtagsOpenDef :call cxxtags#JumpToDefinition()
 command! -nargs=0 CxxtagsCloseMsgBuf :call cxxtags#CloseMsgBuf()
 command! -nargs=0 CxxtagsListOverride :call cxxtags#PrintAllOverrides()
 command! -nargs=0 CxxtagsListOverriden :call cxxtags#PrintAllOverrideNs()
+command! -nargs=0 CxxtagsListTypeInfo :call cxxtags#PrintTypeInfo()
 
 "
 " key maps
@@ -49,3 +50,4 @@ nnoremap <silent> <leader>D :CxxtagsOpenDef<CR>
 nnoremap <silent> <leader>c :CxxtagsCloseMsgBuf<CR>
 nnoremap <silent> <leader>o :CxxtagsListOverride<CR>
 nnoremap <silent> <leader>O :CxxtagsListOverriden<CR>
+nnoremap <silent> <leader>t :CxxtagsListTypeInfo<CR>

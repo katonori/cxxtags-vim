@@ -27,6 +27,7 @@ let s:COL_NAME = 0
 let s:COL_FILE_NAME = 1
 let s:COL_LINE_NO = 2
 let s:COL_COL_NO = 3
+let s:COL_TYPE_KIND = 4
 
 "
 " goto the head of a word.
@@ -38,12 +39,15 @@ endfunction
 "
 " check database directory
 "
-function! s:checkDatabaseDir()
-    if isdirectory(g:CXXTAGS_DatabaseDir)
-        return 0
+function! s:checkEnv()
+    if !isdirectory(g:CXXTAGS_DatabaseDir)
+        echo "ERROR: cxxtags database \"" . g:CXXTAGS_DatabaseDir . "\" is not found."
+        return 1
     endif
-    echo "ERROR: cxxtags database \"" . g:CXXTAGS_DatabaseDir . "\" is not found."
-    return 1
+    if "" == system("which " . g:CXXTAGS_Cmd)
+        echo "ERROR: " . g:CXXTAGS_Cmd . " is not found."
+        return 1
+    endif
 endfunction
 
 "
@@ -68,7 +72,7 @@ endfunction
 " jump to a tag
 "
 function! s:jumpToTag(table, kind)
-    if 0 != s:checkDatabaseDir()
+    if 0 != s:checkEnv()
         return
     endif
     call s:getCurPos()
@@ -119,7 +123,7 @@ let s:winNumSrcFile = 0
 " list query results
 "
 function! cxxtags#PrintAllResults(table, kind)
-    if 0 != s:checkDatabaseDir()
+    if 0 != s:checkEnv()
         return
     endif
     call s:getCurPos()
@@ -187,6 +191,80 @@ function! cxxtags#PrintAllResults(table, kind)
 endfunction
 
 "
+" print type information
+"
+function! cxxtags#PrintTypeInfo()
+    if 0 != s:checkEnv()
+        return
+    endif
+    call s:getCurPos()
+
+    let l:cmd = g:CXXTAGS_Cmd . " type " . g:CXXTAGS_DatabaseDir . " " . s:curSrcFilename . " " . s:curSrcLineNo . " " . s:curSrcColNo
+    let l:resultList = split(system(l:cmd), "\n")
+    let l:maxFileNameLen = 0
+    let l:maxLineNoLen = 0
+    let l:maxColNoLen = 0
+    let l:fileList = []
+    let l:lineNoList = []
+    let l:colNoList = []
+    let l:typeKindList = []
+    let l:lineOfSrcList = []
+
+    for l:result in resultList
+        let l:columns = split(l:result, "|")
+        " get a line from a source file
+        let l:lineBuf = readfile(l:columns[s:COL_FILE_NAME])
+        let l:lineOfSrc = l:lineBuf[l:columns[s:COL_LINE_NO]-1]
+
+        " keep the max number for printing
+        let l:len = strlen(l:columns[s:COL_FILE_NAME])
+        if l:len > l:maxFileNameLen
+            let l:maxFileNameLen = l:len
+        endif
+        let l:len = str2nr(l:columns[s:COL_LINE_NO], 10)
+        if l:len > l:maxLineNoLen
+            let l:maxLineNoLen = l:len
+        endif
+        let l:len = str2nr(l:columns[s:COL_COL_NO], 10)
+        if l:len > l:maxColNoLen
+            let l:maxColNoLen = l:len
+        endif
+
+        call add(l:fileList, l:columns[s:COL_FILE_NAME])
+        call add(l:lineNoList, l:columns[s:COL_LINE_NO])
+        call add(l:colNoList, l:columns[s:COL_COL_NO])
+        call add(l:typeKindList, l:columns[s:COL_TYPE_KIND])
+        call add(l:lineOfSrcList, l:lineOfSrc)
+    endfor
+
+    " decide the number of digits for printing
+    let l:msg = []
+    let l:msgLine = ""
+    let l:lineDigits = s:getDigits(l:maxLineNoLen)
+    let l:colDigits = s:getDigits(l:maxColNoLen)
+    let l:i = 0
+    while l:i < len(l:fileList)
+        let l:msgLine = printf("%-" . l:maxFileNameLen . "s:%" . l:lineDigits . "d,%" . l:colDigits . "d:%8s:%s", l:fileList[i], l:lineNoList[i], l:colNoList[i], l:typeKindList[i], l:lineOfSrcList[i])
+        call add(l:msg, substitute(l:msgLine, "\n", "", "g"))
+        let i += 1
+    endwhile
+
+    if len(l:msg) == 0
+        echo "No type info are found.: " . s:curWord
+    else
+        " show result
+        let s:winNumMsgBuf = bufwinnr(g:CXXTAGS_MsgBufName)
+        let s:winNumSrcFile = winnr()
+        if s:winNumMsgBuf == -1
+            call s:openMsgBuf()
+        endif
+        exec s:winNumMsgBuf . "wincmd w"
+        " output message
+        call s:updateMsgBuf(l:msg)
+    endif
+endfunction
+
+"
 " print all references to a message buffer
 "
 function! cxxtags#PrintAllReferences()
@@ -210,9 +288,11 @@ endfunction
 "
 " go back original position
 "
-function! s:goBack()
+function! cxxtags#goBack()
+    exec s:winNumSrcFile . "wincmd w"
     exec "e " . s:curSrcFilename
     call cursor(s:curSrcLineNo, s:curSrcColNo)
+    exec s:winNumMsgBuf . "wincmd w"
 endfunction
 
 "
@@ -242,6 +322,7 @@ function! s:openMsgBuf()
     let s:winNumMsgBuf = bufwinnr(g:CXXTAGS_MsgBufName)
     nnoremap <buffer> <CR> :CxxtagsTagJump<CR>
     nnoremap <buffer> q :call cxxtags#CloseMsgBuf()<CR>
+    nnoremap <buffer> b :call cxxtags#goBack()<CR>
 endfunction
 
 "
@@ -273,7 +354,8 @@ endfunction
 " close a message buffer
 "
 function! cxxtags#CloseMsgBuf()
-    exec s:winNumMsgBuf . "wincmd c"
+    exec s:winNumMsgBuf . "wincmd w"
+    exec "wincmd c"
     exec s:winNumSrcFile . "wincmd w"
 endfunction
 
