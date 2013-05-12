@@ -30,6 +30,17 @@ let s:COL_COL_NO = 3
 let s:COL_TYPE_KIND = 4
 
 "
+" update a database file
+"
+function! s:updateDbFile()
+    if s:curSrcFilename == ""
+        echo "ERROR: update failed. source file name is empty."
+    endif
+    let l:cmd = g:CXXTAGS_DbManager . " rebuild " . g:CXXTAGS_DatabaseDir . " " . s:curSrcFilename
+    call system(l:cmd)
+endfunction
+
+"
 " goto the head of a word.
 "
 function! s:gotoHeadOfItem()
@@ -76,6 +87,7 @@ function! s:jumpToTag(table, kind)
         return
     endif
     call s:getCurPos()
+    call s:updateDbFile()
 
     let l:cmd = g:CXXTAGS_Cmd . " " . a:table . " " . g:CXXTAGS_DatabaseDir . " " . s:curSrcFilename . " " . s:curSrcLineNo . " " . s:curSrcColNo
     let l:result = substitute(system(l:cmd), "\n", "", "g")
@@ -127,6 +139,7 @@ function! cxxtags#PrintAllResults(table, kind)
         return
     endif
     call s:getCurPos()
+    call s:updateDbFile()
 
     let l:cmd = g:CXXTAGS_Cmd . " " . a:table . " " . g:CXXTAGS_DatabaseDir . " " . s:curSrcFilename . " " . s:curSrcLineNo . " " . s:curSrcColNo
     let l:resultList = split(system(l:cmd), "\n")
@@ -198,6 +211,7 @@ function! cxxtags#PrintTypeInfo()
         return
     endif
     call s:getCurPos()
+    call s:updateDbFile()
 
     let l:cmd = g:CXXTAGS_Cmd . " type " . g:CXXTAGS_DatabaseDir . " " . s:curSrcFilename . " " . s:curSrcLineNo . " " . s:curSrcColNo
     let l:resultList = split(system(l:cmd), "\n")
