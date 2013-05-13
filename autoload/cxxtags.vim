@@ -32,12 +32,16 @@ let s:COL_TYPE_KIND = 4
 "
 " update a database file
 "
-function! s:updateDbFile()
+function! cxxtags#updateDbFile(isForce)
     if s:curSrcFilename == ""
-        echo "ERROR: update failed. source file name is empty."
+        call s:getCurPos()
     endif
-    let l:cmd = g:CXXTAGS_DbManager . " rebuild " . g:CXXTAGS_DatabaseDir . " " . s:curSrcFilename
+    let l:cmd = g:CXXTAGS_DbManager . " rebuild " . (a:isForce ? "--force " : "") . g:CXXTAGS_DatabaseDir . " " . s:curSrcFilename
     call system(l:cmd)
+    if v:shell_error != 0
+        echo "ERROR: command execution failed.: " . l:cmd
+        return
+    endif
 endfunction
 
 "
@@ -55,7 +59,15 @@ function! s:checkEnv()
         echo "ERROR: cxxtags database \"" . g:CXXTAGS_DatabaseDir . "\" is not found."
         return 1
     endif
-    if "" == system("which " . g:CXXTAGS_Cmd)
+
+    " check if the query command is under search path.
+    let l:cmd = "which " . g:CXXTAGS_Cmd
+    let l:result = system("which " . g:CXXTAGS_Cmd)
+    if v:shell_error != 0
+        echo "ERROR: command execution failed.: " . l:cmd
+        return
+    endif
+    if "" == l:result
         echo "ERROR: " . g:CXXTAGS_Cmd . " is not found."
         return 1
     endif
@@ -87,10 +99,14 @@ function! s:jumpToTag(table, kind)
         return
     endif
     call s:getCurPos()
-    call s:updateDbFile()
+    call cxxtags#updateDbFile(0)
 
     let l:cmd = g:CXXTAGS_Cmd . " " . a:table . " " . g:CXXTAGS_DatabaseDir . " " . s:curSrcFilename . " " . s:curSrcLineNo . " " . s:curSrcColNo
     let l:result = substitute(system(l:cmd), "\n", "", "g")
+    if v:shell_error != 0
+        echo "ERROR: command execution failed.: " . l:cmd
+        return
+    endif
     let l:resultList = split(l:result, "|")
     if len(l:resultList) == 0
         echo a:kind . " is not found.: " . s:curWord
@@ -139,10 +155,14 @@ function! cxxtags#PrintAllResults(table, kind)
         return
     endif
     call s:getCurPos()
-    call s:updateDbFile()
+    call cxxtags#updateDbFile(0)
 
     let l:cmd = g:CXXTAGS_Cmd . " " . a:table . " " . g:CXXTAGS_DatabaseDir . " " . s:curSrcFilename . " " . s:curSrcLineNo . " " . s:curSrcColNo
     let l:resultList = split(system(l:cmd), "\n")
+    if v:shell_error != 0
+        echo "ERROR: command execution failed.: " . l:cmd
+        return
+    endif
     let l:maxFileNameLen = 0
     let l:maxLineNoLen = 0
     let l:maxColNoLen = 0
@@ -211,10 +231,14 @@ function! cxxtags#PrintTypeInfo()
         return
     endif
     call s:getCurPos()
-    call s:updateDbFile()
+    call cxxtags#updateDbFile(0)
 
     let l:cmd = g:CXXTAGS_Cmd . " type " . g:CXXTAGS_DatabaseDir . " " . s:curSrcFilename . " " . s:curSrcLineNo . " " . s:curSrcColNo
     let l:resultList = split(system(l:cmd), "\n")
+    if v:shell_error != 0
+        echo "ERROR: command execution failed.: " . l:cmd
+        return
+    endif
     let l:maxFileNameLen = 0
     let l:maxLineNoLen = 0
     let l:maxColNoLen = 0
