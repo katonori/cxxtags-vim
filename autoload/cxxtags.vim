@@ -172,7 +172,7 @@ function! cxxtags#PrintAllResults(table, kind)
     let l:lineOfSrcList = []
 
     for l:result in resultList
-        let l:columns = split(l:result, "|")
+        let l:columns = split(l:result, "|", 1)
         " get a line from a source file
         let l:lineBuf = readfile(l:columns[s:COL_FILE_NAME])
         let l:lineOfSrc = l:lineBuf[l:columns[s:COL_LINE_NO]-1]
@@ -234,55 +234,84 @@ function! cxxtags#PrintTypeInfo()
     call cxxtags#updateDbFile(0)
 
     let l:cmd = g:CXXTAGS_Cmd . " type " . g:CXXTAGS_DatabaseDir . " " . s:curSrcFilename . " " . s:curSrcLineNo . " " . s:curSrcColNo
+    if g:CXXTAGS_Debug != 0
+        echo l:cmd
+    endif
     let l:resultList = split(system(l:cmd), "\n")
     if v:shell_error != 0
         echo "ERROR: command execution failed.: " . l:cmd
         return
     endif
+    let l:maxTypeNameLen = 0
+    let l:maxNameLen = 0
     let l:maxFileNameLen = 0
     let l:maxLineNoLen = 0
     let l:maxColNoLen = 0
+    let l:typeNameList = []
+    let l:nameList = []
     let l:fileList = []
     let l:lineNoList = []
     let l:colNoList = []
     let l:typeKindList = []
     let l:lineOfSrcList = []
+    let l:COL_TYPE_TYPE_NAME = 0
+    let l:COL_TYPE_NAME = 1
+    let l:COL_TYPE_FILE_NAME = 2
+    let l:COL_TYPE_LINE_NO = 3
+    let l:COL_TYPE_COL_NO = 4
+    let l:COL_TYPE_KIND = 5
 
+    " parse command output 
     for l:result in resultList
-        let l:columns = split(l:result, "|")
+        let l:columns = split(l:result, "|", 1)
         " get a line from a source file
-        let l:lineBuf = readfile(l:columns[s:COL_FILE_NAME])
-        let l:lineOfSrc = l:lineBuf[l:columns[s:COL_LINE_NO]-1]
+        let l:lineBuf = readfile(l:columns[l:COL_TYPE_FILE_NAME])
+        let l:lineOfSrc = l:lineBuf[l:columns[l:COL_TYPE_LINE_NO]-1]
 
         " keep the max number for printing
-        let l:len = strlen(l:columns[s:COL_FILE_NAME])
+        let l:len = strlen(l:columns[l:COL_TYPE_TYPE_NAME])
+        if l:len > l:maxTypeNameLen
+            let l:maxTypeNameLen = l:len
+        endif
+        let l:len = strlen(l:columns[l:COL_TYPE_NAME])
+        if l:len > l:maxNameLen
+            let l:maxNameLen = l:len
+        endif
+        let l:len = strlen(l:columns[l:COL_TYPE_FILE_NAME])
         if l:len > l:maxFileNameLen
             let l:maxFileNameLen = l:len
         endif
-        let l:len = str2nr(l:columns[s:COL_LINE_NO], 10)
+        let l:len = str2nr(l:columns[l:COL_TYPE_LINE_NO], 10)
         if l:len > l:maxLineNoLen
             let l:maxLineNoLen = l:len
         endif
-        let l:len = str2nr(l:columns[s:COL_COL_NO], 10)
+        let l:len = str2nr(l:columns[l:COL_TYPE_COL_NO], 10)
         if l:len > l:maxColNoLen
             let l:maxColNoLen = l:len
         endif
 
-        call add(l:fileList, l:columns[s:COL_FILE_NAME])
-        call add(l:lineNoList, l:columns[s:COL_LINE_NO])
-        call add(l:colNoList, l:columns[s:COL_COL_NO])
-        call add(l:typeKindList, l:columns[s:COL_TYPE_KIND])
+        if l:columns[l:COL_TYPE_TYPE_NAME] == ""
+            call add(l:typeNameList, "<anonymous>")
+        else
+            call add(l:typeNameList, l:columns[l:COL_TYPE_TYPE_NAME])
+        endif
+        call add(l:nameList, l:columns[l:COL_TYPE_NAME])
+        call add(l:fileList, l:columns[l:COL_TYPE_FILE_NAME])
+        call add(l:lineNoList, l:columns[l:COL_TYPE_LINE_NO])
+        call add(l:colNoList, l:columns[l:COL_TYPE_COL_NO])
+        call add(l:typeKindList, l:columns[l:COL_TYPE_KIND])
         call add(l:lineOfSrcList, l:lineOfSrc)
     endfor
 
-    " decide the number of digits for printing
     let l:msg = []
     let l:msgLine = ""
+    " decide the number of digits for printing
     let l:lineDigits = s:getDigits(l:maxLineNoLen)
     let l:colDigits = s:getDigits(l:maxColNoLen)
     let l:i = 0
+    " print to string buff
     while l:i < len(l:fileList)
-        let l:msgLine = printf("%-" . l:maxFileNameLen . "s:%" . l:lineDigits . "d,%" . l:colDigits . "d:%8s:%s", l:fileList[i], l:lineNoList[i], l:colNoList[i], l:typeKindList[i], l:lineOfSrcList[i])
+        let l:msgLine = printf("%-" . l:maxFileNameLen . "s:%" . l:lineDigits . "d,%" . l:colDigits . "d:%-" . l:maxTypeNameLen . "s:%-" . l:maxNameLen . "s:%-8s:%s", l:fileList[i], l:lineNoList[i], l:colNoList[i], l:typeNameList[i], l:nameList[i], l:typeKindList[i], l:lineOfSrcList[i])
         call add(l:msg, substitute(l:msgLine, "\n", "", "g"))
         let i += 1
     endwhile

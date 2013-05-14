@@ -30,6 +30,7 @@ let g:CXXTAGS_MsgBufName = "cxxtags_msg"
 let g:CXXTAGS_Cmd = "cxxtags_query"
 let g:CXXTAGS_DatabaseDir = "./db"
 let g:CXXTAGS_DbManager = "cxxtags_merger"
+let g:CXXTAGS_Debug = 0
 
 "
 " commands
