@@ -29,6 +29,8 @@
 let g:CXXTAGS_MsgBufName = "cxxtags_msg"
 let g:CXXTAGS_Cmd = "cxxtags_query"
 let g:CXXTAGS_DatabaseDir = "./db"
+let g:CXXTAGS_DbManager = "cxxtags_db_manager"
+let g:CXXTAGS_Debug = 0
 
 "
 " commands
@@ -39,6 +41,8 @@ command! -nargs=0 CxxtagsOpenDef :call cxxtags#JumpToDefinition()
 command! -nargs=0 CxxtagsCloseMsgBuf :call cxxtags#CloseMsgBuf()
 command! -nargs=0 CxxtagsListOverride :call cxxtags#PrintAllOverrides()
 command! -nargs=0 CxxtagsListOverriden :call cxxtags#PrintAllOverrideNs()
+command! -nargs=0 CxxtagsListTypeInfo :call cxxtags#PrintTypeInfo()
+command! -nargs=0 CxxtagsUpdateDbFile :call cxxtags#updateDbFile(1)
 
 "
 " key maps
@@ -49,3 +53,5 @@ nnoremap <silent> <leader>D :CxxtagsOpenDef<CR>
 nnoremap <silent> <leader>c :CxxtagsCloseMsgBuf<CR>
 nnoremap <silent> <leader>o :CxxtagsListOverride<CR>
 nnoremap <silent> <leader>O :CxxtagsListOverriden<CR>
+nnoremap <silent> <leader>t :CxxtagsListTypeInfo<CR>
+nnoremap <silent> <leader>u :CxxtagsUpdateDbFile<CR>

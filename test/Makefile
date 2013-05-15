@@ -1,4 +1,4 @@
-test: db
+test: clean db
 	vim -R --noplugin -u NONE inhe.cpp -S test.vim
 db:
 	cxxtags inhe.cpp -o inhe.db

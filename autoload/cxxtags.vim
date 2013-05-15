@@ -23,6 +23,27 @@
 " ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 " DAMAGE.
 
+let s:COL_NAME = 0
+let s:COL_FILE_NAME = 1
+let s:COL_LINE_NO = 2
+let s:COL_COL_NO = 3
+let s:COL_TYPE_KIND = 4
+
+"
+" update a database file
+"
+function! cxxtags#updateDbFile(isForce)
+    if s:curSrcFilename == ""
+        call s:getCurPos()
+    endif
+    let l:cmd = g:CXXTAGS_DbManager . " rebuild " . (a:isForce ? "--force " : "") . g:CXXTAGS_DatabaseDir . " " . s:curSrcFilename
+    call system(l:cmd)
+    if v:shell_error != 0
+        echo "ERROR: command execution failed.: " . l:cmd
+        return
+    endif
+endfunction
+
 "
 " goto the head of a word.
 "
@@ -33,12 +54,23 @@ endfunction
 "
 " check database directory
 "
-function! s:checkDatabaseDir()
-    if isdirectory(g:CXXTAGS_DatabaseDir)
-        return 0
+function! s:checkEnv()
+    if !isdirectory(g:CXXTAGS_DatabaseDir)
+        echo "ERROR: cxxtags database \"" . g:CXXTAGS_DatabaseDir . "\" is not found."
+        return 1
     endif
-    echo "ERROR: cxxtags database \"" . g:CXXTAGS_DatabaseDir . "\" is not found."
-    return 1
+
+    " check if the query command is under search path.
+    let l:cmd = "which " . g:CXXTAGS_Cmd
+    let l:result = system("which " . g:CXXTAGS_Cmd)
+    if v:shell_error != 0
+        echo "ERROR: command execution failed.: " . l:cmd
+        return
+    endif
+    if "" == l:result
+        echo "ERROR: " . g:CXXTAGS_Cmd . " is not found."
+        return 1
+    endif
 endfunction
 
 "
@@ -63,19 +95,24 @@ endfunction
 " jump to a tag
 "
 function! s:jumpToTag(table, kind)
-    if 0 != s:checkDatabaseDir()
+    if 0 != s:checkEnv()
         return
     endif
     call s:getCurPos()
+    call cxxtags#updateDbFile(0)
 
     let l:cmd = g:CXXTAGS_Cmd . " " . a:table . " " . g:CXXTAGS_DatabaseDir . " " . s:curSrcFilename . " " . s:curSrcLineNo . " " . s:curSrcColNo
     let l:result = substitute(system(l:cmd), "\n", "", "g")
+    if v:shell_error != 0
+        echo "ERROR: command execution failed.: " . l:cmd
+        return
+    endif
     let l:resultList = split(l:result, "|")
     if len(l:resultList) == 0
         echo a:kind . " is not found.: " . s:curWord
     else
-        execute ":e " . l:resultList[0]
-        call cursor(l:resultList[1], l:resultList[2])
+        execute ":e " . l:resultList[s:COL_FILE_NAME]
+        call cursor(l:resultList[s:COL_LINE_NO], l:resultList[s:COL_COL_NO])
         execute ":normal zz"
     endif
 endfunction
@@ -114,13 +151,18 @@ let s:winNumSrcFile = 0
 " list query results
 "
 function! cxxtags#PrintAllResults(table, kind)
-    if 0 != s:checkDatabaseDir()
+    if 0 != s:checkEnv()
         return
     endif
     call s:getCurPos()
+    call cxxtags#updateDbFile(0)
 
     let l:cmd = g:CXXTAGS_Cmd . " " . a:table . " " . g:CXXTAGS_DatabaseDir . " " . s:curSrcFilename . " " . s:curSrcLineNo . " " . s:curSrcColNo
     let l:resultList = split(system(l:cmd), "\n")
+    if v:shell_error != 0
+        echo "ERROR: command execution failed.: " . l:cmd
+        return
+    endif
     let l:maxFileNameLen = 0
     let l:maxLineNoLen = 0
     let l:maxColNoLen = 0
@@ -130,28 +172,28 @@ function! cxxtags#PrintAllResults(table, kind)
     let l:lineOfSrcList = []
 
     for l:result in resultList
-        let l:columns = split(l:result, "|")
+        let l:columns = split(l:result, "|", 1)
         " get a line from a source file
-        let l:lineBuf = readfile(l:columns[0])
-        let l:lineOfSrc = l:lineBuf[l:columns[1]-1]
+        let l:lineBuf = readfile(l:columns[s:COL_FILE_NAME])
+        let l:lineOfSrc = l:lineBuf[l:columns[s:COL_LINE_NO]-1]
 
         " keep the max number for printing
-        let l:len = strlen(l:columns[0])
+        let l:len = strlen(l:columns[s:COL_FILE_NAME])
         if l:len > l:maxFileNameLen
             let l:maxFileNameLen = l:len
         endif
-        let l:len = str2nr(l:columns[1], 10)
+        let l:len = str2nr(l:columns[s:COL_LINE_NO], 10)
         if l:len > l:maxLineNoLen
             let l:maxLineNoLen = l:len
         endif
-        let l:len = str2nr(l:columns[2], 10)
+        let l:len = str2nr(l:columns[s:COL_COL_NO], 10)
         if l:len > l:maxColNoLen
             let l:maxColNoLen = l:len
         endif
 
-        call add(l:fileList, l:columns[0])
-        call add(l:lineNoList, l:columns[1])
-        call add(l:colNoList, l:columns[2])
+        call add(l:fileList, l:columns[s:COL_FILE_NAME])
+        call add(l:lineNoList, l:columns[s:COL_LINE_NO])
+        call add(l:colNoList, l:columns[s:COL_COL_NO])
         call add(l:lineOfSrcList, l:lineOfSrc)
     endfor
 
@@ -170,6 +212,114 @@ function! cxxtags#PrintAllResults(table, kind)
     if len(l:msg) == 0
         echo "No " . a:kind . " are found.: " . s:curWord
     else
+        let s:winNumMsgBuf = bufwinnr(g:CXXTAGS_MsgBufName)
+        let s:winNumSrcFile = winnr()
+        if s:winNumMsgBuf == -1
+            call s:openMsgBuf()
+        endif
+        exec s:winNumMsgBuf . "wincmd w"
+        " output message
+        call s:updateMsgBuf(l:msg)
+    endif
+endfunction
+
+"
+" print type information
+"
+function! cxxtags#PrintTypeInfo()
+    if 0 != s:checkEnv()
+        return
+    endif
+    call s:getCurPos()
+    call cxxtags#updateDbFile(0)
+
+    let l:cmd = g:CXXTAGS_Cmd . " type " . g:CXXTAGS_DatabaseDir . " " . s:curSrcFilename . " " . s:curSrcLineNo . " " . s:curSrcColNo
+    if g:CXXTAGS_Debug != 0
+        echo l:cmd
+    endif
+    let l:resultList = split(system(l:cmd), "\n")
+    if v:shell_error != 0
+        echo "ERROR: command execution failed.: " . l:cmd
+        return
+    endif
+    let l:maxTypeNameLen = 0
+    let l:maxNameLen = 0
+    let l:maxFileNameLen = 0
+    let l:maxLineNoLen = 0
+    let l:maxColNoLen = 0
+    let l:typeNameList = []
+    let l:nameList = []
+    let l:fileList = []
+    let l:lineNoList = []
+    let l:colNoList = []
+    let l:typeKindList = []
+    let l:lineOfSrcList = []
+    let l:COL_TYPE_TYPE_NAME = 0
+    let l:COL_TYPE_NAME = 1
+    let l:COL_TYPE_FILE_NAME = 2
+    let l:COL_TYPE_LINE_NO = 3
+    let l:COL_TYPE_COL_NO = 4
+    let l:COL_TYPE_KIND = 5
+
+    " parse command output 
+    for l:result in resultList
+        let l:columns = split(l:result, "|", 1)
+        " get a line from a source file
+        let l:lineBuf = readfile(l:columns[l:COL_TYPE_FILE_NAME])
+        let l:lineOfSrc = l:lineBuf[l:columns[l:COL_TYPE_LINE_NO]-1]
+
+        " keep the max number for printing
+        let l:len = strlen(l:columns[l:COL_TYPE_TYPE_NAME])
+        if l:len > l:maxTypeNameLen
+            let l:maxTypeNameLen = l:len
+        endif
+        let l:len = strlen(l:columns[l:COL_TYPE_NAME])
+        if l:len > l:maxNameLen
+            let l:maxNameLen = l:len
+        endif
+        let l:len = strlen(l:columns[l:COL_TYPE_FILE_NAME])
+        if l:len > l:maxFileNameLen
+            let l:maxFileNameLen = l:len
+        endif
+        let l:len = str2nr(l:columns[l:COL_TYPE_LINE_NO], 10)
+        if l:len > l:maxLineNoLen
+            let l:maxLineNoLen = l:len
+        endif
+        let l:len = str2nr(l:columns[l:COL_TYPE_COL_NO], 10)
+        if l:len > l:maxColNoLen
+            let l:maxColNoLen = l:len
+        endif
+
+        if l:columns[l:COL_TYPE_TYPE_NAME] == ""
+            call add(l:typeNameList, "<anonymous>")
+        else
+            call add(l:typeNameList, l:columns[l:COL_TYPE_TYPE_NAME])
+        endif
+        call add(l:nameList, l:columns[l:COL_TYPE_NAME])
+        call add(l:fileList, l:columns[l:COL_TYPE_FILE_NAME])
+        call add(l:lineNoList, l:columns[l:COL_TYPE_LINE_NO])
+        call add(l:colNoList, l:columns[l:COL_TYPE_COL_NO])
+        call add(l:typeKindList, l:columns[l:COL_TYPE_KIND])
+        call add(l:lineOfSrcList, l:lineOfSrc)
+    endfor
+
+    let l:msg = []
+    let l:msgLine = ""
+    " decide the number of digits for printing
+    let l:lineDigits = s:getDigits(l:maxLineNoLen)
+    let l:colDigits = s:getDigits(l:maxColNoLen)
+    let l:i = 0
+    " print to string buff
+    while l:i < len(l:fileList)
+        let l:msgLine = printf("%-" . l:maxFileNameLen . "s:%" . l:lineDigits . "d,%" . l:colDigits . "d:%-" . l:maxTypeNameLen . "s:%-" . l:maxNameLen . "s:%-8s:%s", l:fileList[i], l:lineNoList[i], l:colNoList[i], l:typeNameList[i], l:nameList[i], l:typeKindList[i], l:lineOfSrcList[i])
+        call add(l:msg, substitute(l:msgLine, "\n", "", "g"))
+        let i += 1
+    endwhile
+
+    if len(l:msg) == 0
+        echo "No type info are found.: " . s:curWord
+    else
+        " show result
         let s:winNumMsgBuf = bufwinnr(g:CXXTAGS_MsgBufName)
         let s:winNumSrcFile = winnr()
         if s:winNumMsgBuf == -1
@@ -205,9 +355,11 @@ endfunction
 "
 " go back original position
 "
-function! s:goBack()
+function! cxxtags#goBack()
+    exec s:winNumSrcFile . "wincmd w"
     exec "e " . s:curSrcFilename
     call cursor(s:curSrcLineNo, s:curSrcColNo)
+    exec s:winNumMsgBuf . "wincmd w"
 endfunction
 
 "
@@ -237,6 +389,7 @@ function! s:openMsgBuf()
     let s:winNumMsgBuf = bufwinnr(g:CXXTAGS_MsgBufName)
     nnoremap <buffer> <CR> :CxxtagsTagJump<CR>
     nnoremap <buffer> q :call cxxtags#CloseMsgBuf()<CR>
+    nnoremap <buffer> b :call cxxtags#goBack()<CR>
 endfunction
 
 "
@@ -268,7 +421,8 @@ endfunction
 " close a message buffer
 "
 function! cxxtags#CloseMsgBuf()
-    exec s:winNumMsgBuf . "wincmd c"
+    exec s:winNumMsgBuf . "wincmd w"
+    exec "wincmd c"
     exec s:winNumSrcFile . "wincmd w"
 endfunction
 
