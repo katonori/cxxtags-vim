@@ -212,6 +212,8 @@ function! cxxtags#PrintAllResults(table, kind)
     if len(l:msg) == 0
         echo "No " . a:kind . " are found.: " . s:curWord
     else
+        " add the current position to jumplist
+        exec "normal L"
         let s:winNumMsgBuf = bufwinnr(g:CXXTAGS_MsgBufName)
         let s:winNumSrcFile = winnr()
         if s:winNumMsgBuf == -1
@@ -319,6 +321,8 @@ function! cxxtags#PrintTypeInfo()
     if len(l:msg) == 0
         echo "No type info are found.: " . s:curWord
     else
+        " add the current position to jumplist
+        exec "normal L"
         " show result
         let s:winNumMsgBuf = bufwinnr(g:CXXTAGS_MsgBufName)
         let s:winNumSrcFile = winnr()
@@ -413,7 +417,7 @@ endfunction
 function! s:openSrcFileFromMsgBuf(fileName, lineNo, colNo)
     exec s:winNumSrcFile . "wincmd w"
     exec "e " . a:fileName
-    call cursor(a:lineNo, a:colNo)
+    exec "call cursor(" . a:lineNo . "," . a:colNo .")"
     exec "normal zz"
 endfunction
 
@@ -425,5 +429,3 @@ function! cxxtags#CloseMsgBuf()
     exec "wincmd c"
     exec s:winNumSrcFile . "wincmd w"
 endfunction
-
-command! -nargs=0 CxxtagsTagJump :call cxxtags#TagJumpFromMsgBuf()

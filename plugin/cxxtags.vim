@@ -43,6 +43,7 @@ command! -nargs=0 CxxtagsListOverride :call cxxtags#PrintAllOverrides()
 command! -nargs=0 CxxtagsListOverriden :call cxxtags#PrintAllOverrideNs()
 command! -nargs=0 CxxtagsListTypeInfo :call cxxtags#PrintTypeInfo()
 command! -nargs=0 CxxtagsUpdateDbFile :call cxxtags#updateDbFile(1)
+command! -nargs=0 CxxtagsTagJump :call cxxtags#TagJumpFromMsgBuf()
 
 "
 " key maps
