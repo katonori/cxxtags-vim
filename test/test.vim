@@ -4,10 +4,14 @@ let s:refDatasDef = []
 let s:inDatasDef = []
 let s:inDatasRef = []
 let s:refDatasRef = []
+let s:refPosRef = []
 let s:inDatasOverride = []
 let s:refDatasOverride = []
+let s:refPosOverride = []
 let s:inDatasOverrideN = []
 let s:refDatasOverrideN = []
+let s:refPosOverrideN = []
+let s:logName = "test.log"
 
 function! s:init()
     let l:fileName = expand("%:p")
@@ -37,11 +41,18 @@ function! s:init()
     call add(l:tmpList, l:fileName . ":68, 8:    a->response();")
     call add(l:tmpList, l:fileName . ":77,12:    parent.response();")
     call add(s:refDatasRef, l:tmpList)
+    let l:tmpList = []
+    call add(l:tmpList, { 'line':68, 'col':8 })
+    call add(l:tmpList, { 'line':77, 'col':12 })
+    call add(s:refPosRef, l:tmpList)
 
     call add(s:inDatasRef, { 'line':36, 'col':14 })
     let l:tmpList = []
     call add(l:tmpList, l:fileName . ":78,11:    child.response();")
     call add(s:refDatasRef, l:tmpList)
+    let l:tmpList = []
+    call add(l:tmpList, { 'line':78, 'col':11 })
+    call add(s:refPosRef, l:tmpList)
 
     "
     " override
@@ -51,6 +62,10 @@ function! s:init()
     call add(l:tmpList, l:fileName . ":33,18:    virtual void response(void);")
     call add(l:tmpList, l:fileName . ":36,14:void CChild::response(void) {")
     call add(s:refDatasOverride, l:tmpList)
+    let l:tmpList = []
+    call add(l:tmpList, { 'line':33, 'col':18 })
+    call add(l:tmpList, { 'line':36, 'col':14 })
+    call add(s:refPosOverride, l:tmpList)
 
     call add(s:inDatasOverride, { 'line':62, 'col':14 })
     let l:tmpList = []
@@ -59,6 +74,12 @@ function! s:init()
     call add(l:tmpList, l:fileName . ":20,18:    virtual void response(void);")
     call add(l:tmpList, l:fileName . ":23,16:void CParent1::response(void) {")
     call add(s:refDatasOverride, l:tmpList)
+    let l:tmpList = []
+    call add(l:tmpList, { 'line':8, 'col':18 })
+    call add(l:tmpList, { 'line':11, 'col':16 })
+    call add(l:tmpList, { 'line':20, 'col':18 })
+    call add(l:tmpList, { 'line':23, 'col':16 })
+    call add(s:refPosOverride, l:tmpList)
 
     "
     " overriden
@@ -70,14 +91,24 @@ function! s:init()
     call add(l:tmpList, l:fileName . ":59,18:    virtual void response(void);")
     call add(l:tmpList, l:fileName . ":62,14:void COther::response(void) {")
     call add(s:refDatasOverrideN, l:tmpList)
+    let l:tmpList = []
+    call add(l:tmpList, { 'line':33, 'col':18 })
+    call add(l:tmpList, { 'line':36, 'col':14 })
+    call add(l:tmpList, { 'line':59, 'col':18 })
+    call add(l:tmpList, { 'line':62, 'col':14 })
+    call add(s:refPosOverrideN, l:tmpList)
 
     call add(s:inDatasOverrideN, { 'line':78, 'col':11 })
     let l:tmpList = []
     call add(l:tmpList, l:fileName . ":46,18:    virtual void response(void);")
     call add(l:tmpList, l:fileName . ":49,15:void CGChild::response(void) {")
     call add(s:refDatasOverrideN, l:tmpList)
+    let l:tmpList = []
+    call add(l:tmpList, { 'line':46, 'col':18 })
+    call add(l:tmpList, { 'line':49, 'col':15 })
+    call add(s:refPosOverrideN, l:tmpList)
 
-    exec "redir! > test.log"
+    exec "redir! > " . s:logName
     exec "set runtimepath=../"
     exec "source ../plugin/cxxtags.vim"
 endfunction
@@ -110,7 +141,26 @@ function! s:testJump(cmd, inDatas, refDatas)
     endwhile
 endfunction
 
-function! s:testList(cmd, inDatas, refDatas)
+"
+" test CxxtagsTagJump
+"
+function! s:testOpenSrcFromMsgBuf(ref)
+    normal j
+    echo getline(".")
+    exec "CxxtagsTagJump"
+    wincmd w
+    if line('.') != a:ref.line
+        echo "ERROR: line:" . line(".") . ", " . a:ref.line
+        let s:err+=1;
+    endif
+    if col('.') != a:ref.col
+        echo "ERROR: col:" . line(".") . ", " . a:ref.col
+        let s:err+=1;
+    endif
+    wincmd p
+endfunction
+
+function! s:testList(cmd, inDatas, refDatas, refPosDatas)
     let l:i = 0
     echo "test: " . a:cmd . ": " . len(a:inDatas)
     while l:i < len(a:refDatas)
@@ -135,6 +185,7 @@ function! s:testList(cmd, inDatas, refDatas)
             else
                 echo "OK"
             endif
+            call s:testOpenSrcFromMsgBuf(a:refPosDatas[l:i][l:ln])
             let l:ln += 1
         endwhile
         " close buffer
@@ -184,11 +235,11 @@ function! s:run()
     " test definitions
     call s:testJump("CxxtagsOpenDef", s:inDatasDef, s:refDatasDef)
     " ref test
-    call s:testList("CxxtagsListRefs", s:inDatasRef, s:refDatasRef)
+    call s:testList("CxxtagsListRefs", s:inDatasRef, s:refDatasRef, s:refPosRef)
     " override test
-    call s:testList("CxxtagsListOverride", s:inDatasOverride, s:refDatasOverride)
+    call s:testList("CxxtagsListOverride", s:inDatasOverride, s:refDatasOverride, s:refPosOverride)
     " overriden test
-    call s:testList("CxxtagsListOverriden", s:inDatasOverrideN, s:refDatasOverrideN)
+    call s:testList("CxxtagsListOverriden", s:inDatasOverrideN, s:refDatasOverrideN, s:refPosOverrideN)
     " close test
     call s:testClose()
 
