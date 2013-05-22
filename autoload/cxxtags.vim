@@ -37,6 +37,9 @@ function! cxxtags#updateDbFile(isForce)
         call s:getCurPos()
     endif
     let l:cmd = g:CXXTAGS_DbManager . " rebuild " . (a:isForce ? "--force " : "") . g:CXXTAGS_DatabaseDir . " " . s:curSrcFilename
+    if g:CXXTAGS_Debug != 0
+        echo l:cmd
+    endif
     call system(l:cmd)
     if v:shell_error != 0
         echo "ERROR: command execution failed.: " . l:cmd
@@ -102,6 +105,9 @@ function! s:jumpToTag(table, kind)
     call cxxtags#updateDbFile(0)
 
     let l:cmd = g:CXXTAGS_Cmd . " " . a:table . " " . g:CXXTAGS_DatabaseDir . " " . s:curSrcFilename . " " . s:curSrcLineNo . " " . s:curSrcColNo
+    if g:CXXTAGS_Debug != 0
+        echo l:cmd
+    endif
     let l:result = substitute(system(l:cmd), "\n", "", "g")
     if v:shell_error != 0
         echo "ERROR: command execution failed.: " . l:cmd
@@ -158,6 +164,9 @@ function! cxxtags#PrintAllResults(table, kind)
     call cxxtags#updateDbFile(0)
 
     let l:cmd = g:CXXTAGS_Cmd . " " . a:table . " " . g:CXXTAGS_DatabaseDir . " " . s:curSrcFilename . " " . s:curSrcLineNo . " " . s:curSrcColNo
+    if g:CXXTAGS_Debug != 0
+        echo l:cmd
+    endif
     let l:resultList = split(system(l:cmd), "\n")
     if v:shell_error != 0
         echo "ERROR: command execution failed.: " . l:cmd
@@ -386,7 +395,7 @@ endfunction
 " open a message buffer
 "
 function! s:openMsgBuf()
-    execute "bel 10new " . g:CXXTAGS_MsgBufName
+    execute "bo 10new " . g:CXXTAGS_MsgBufName
     execute "set buftype=nofile"
     execute "set filetype=cpp"
     setlocal nonumber
