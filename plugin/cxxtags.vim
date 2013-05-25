@@ -26,11 +26,21 @@
 "
 " variable declarations which configure the behavior of this script
 "
-let g:CXXTAGS_MsgBufName = "cxxtags_msg"
-let g:CXXTAGS_Cmd = "cxxtags_query"
-let g:CXXTAGS_DatabaseDir = "./db"
-let g:CXXTAGS_DbManager = "cxxtags_db_manager"
-let g:CXXTAGS_Debug = 0
+if !exists("g:CXXTAGS_MsgBufName")
+    let g:CXXTAGS_MsgBufName = "cxxtags_msg"
+endif
+if !exists("g:CXXTAGS_Cmd")
+    let g:CXXTAGS_Cmd = "cxxtags_query"
+endif
+if !exists("g:CXXTAGS_DatabaseDir")
+    let g:CXXTAGS_DatabaseDir = "./db"
+endif
+if !exists("g:CXXTAGS_DbManager")
+    let g:CXXTAGS_DbManager = "cxxtags_db_manager"
+endif
+if !exists("g:CXXTAGS_Debug")
+    let g:CXXTAGS_Debug = 0
+endif
 
 "
 " commands
