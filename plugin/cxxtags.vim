@@ -26,18 +26,16 @@
 "
 " variable declarations which configure the behavior of this script
 "
-if !exists("g:CXXTAGS_MsgBufName")
-    let g:CXXTAGS_MsgBufName = "cxxtags_msg"
-endif
-if !exists("g:CXXTAGS_Cmd")
-    let g:CXXTAGS_Cmd = "cxxtags_query"
-endif
-if !exists("g:CXXTAGS_DatabaseDir")
-    let g:CXXTAGS_DatabaseDir = "./db"
-endif
-if !exists("g:CXXTAGS_DbManager")
-    let g:CXXTAGS_DbManager = "cxxtags_db_manager"
-endif
+function! s:setInitValueStr(name, val)
+    if !exists(a:name)
+        exec "let " . a:name . "='" . a:val . "'"
+    endif
+endfunction
+
+call s:setInitValueStr("g:CXXTAGS_MsgBufName", "cxxtags_msg")
+call s:setInitValueStr("g:CXXTAGS_Cmd", "cxxtags_query")
+call s:setInitValueStr("g:CXXTAGS_DatabaseDir", "./db")
+call s:setInitValueStr("g:CXXTAGS_DbManager", "cxxtags_db_manager")
 if !exists("g:CXXTAGS_Debug")
     let g:CXXTAGS_Debug = 0
 endif
@@ -54,15 +52,3 @@ command! -nargs=0 CxxtagsListOverriden :call cxxtags#PrintAllOverrideNs()
 command! -nargs=0 CxxtagsListTypeInfo :call cxxtags#PrintTypeInfo()
 command! -nargs=0 CxxtagsUpdateDbFile :call cxxtags#updateDbFile(1)
 command! -nargs=0 CxxtagsTagJump :call cxxtags#TagJumpFromMsgBuf()
-
-"
-" key maps
-"
-nnoremap <silent> <leader>d :CxxtagsOpenDecl<CR>
-nnoremap <silent> <leader>r :CxxtagsListRefs<CR>
-nnoremap <silent> <leader>D :CxxtagsOpenDef<CR>
-nnoremap <silent> <leader>c :CxxtagsCloseMsgBuf<CR>
-nnoremap <silent> <leader>o :CxxtagsListOverride<CR>
-nnoremap <silent> <leader>O :CxxtagsListOverriden<CR>
-nnoremap <silent> <leader>t :CxxtagsListTypeInfo<CR>
-nnoremap <silent> <leader>u :CxxtagsUpdateDbFile<CR>

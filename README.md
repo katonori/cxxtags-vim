@@ -33,24 +33,10 @@ Commands
 |CxxtagsUpdateDbFile|Update a database file of the source file opened in current buffer.|
 |CxxtagsCloseMsgBuf| Close the message buffer. |
 
-Default key maps
+Key maps
 ------
-
-### Normal mode
-
-| Map          | Command            |
-| ------------ | ------------------ |
-|\<leader\>d   | CxxtagsOpenDecl    |
-|\<leader\>D   | CxxtagsOpenDef     |
-|\<leader\>r   | CxxtagsListRefs    |
-|\<leader\>o   | CxxtagsListOverride    |
-|\<leader\>O   | CxxtagsListOverriden   |
-|\<leader\>t   | CxxtagsListTypeInfo |
-|\<leader\>u   | CxxtagsUpdateDbFile |
-|\<leader\>c   | CxxtagsCloseMsgBuf |
-
 ### Message Buffer
-You can also use keys below in a message buffer.
+These key mappings are set in message buffer.
 
 | Map          | Description            |
 | ------------ | ------------------ |
@@ -58,15 +44,28 @@ You can also use keys below in a message buffer.
 |q | Close the message buffer. |
 |b | Back to the original location in a source file. |
 
+### Normal mode
+Key mapping are not set for normal mode by default. Please set by yourself.
+These are key mapping example. Copy & paste these lines to your `~/.vimrc.`
+
+    nnoremap <unique> <silent> <leader>d :CxxtagsOpenDecl<CR>
+    nnoremap <unique> <silent> <leader>r :CxxtagsListRefs<CR>
+    nnoremap <unique> <silent> <leader>D :CxxtagsOpenDef<CR>
+    nnoremap <unique> <silent> <leader>q :CxxtagsCloseMsgBuf<CR>
+    nnoremap <unique> <silent> <leader>o :CxxtagsListOverride<CR>
+    nnoremap <unique> <silent> <leader>O :CxxtagsListOverriden<CR>
+    nnoremap <unique> <silent> <leader>t :CxxtagsListTypeInfo<CR>
+    nnoremap <unique> <silent> <leader>u :CxxtagsUpdateDbFile<CR>
+
 Variables
 ------
 
 |Name                 | Default value     | Description |
 | ------------------- | ----------------- | ----------- |
-|CXXTAGS_DatabaseDir  | "./db"            | Path to a cxxtags database directory. |
-|CXXTAGS_Cmd          | "cxxtags_query"   | Location of *cxxtags_query* command. This default value assumes *cxxtags_query* to be under the serach path. Absolute path to *cxxtags_query* is also acceptable.|
-|CXXTAGS_MsgBufName   | "cxxtags_msg"     | Name of the message buffer which a reference list is printed to|
-|CXXTAGS_DbManager    | "cxxtags_db_manager" | Location of *cxxtags_db_manager* command. |
+|CXXTAGS\_DatabaseDir  | "./db"            | Path to a cxxtags database directory. |
+|CXXTAGS\_Cmd          | "cxxtags\_query"   | Location of *cxxtags\_query* command. This default value assumes *cxxtags\_query* to be under the serach path. Absolute path to *cxxtags\_query* is also acceptable.|
+|CXXTAGS\_MsgBufName   | "cxxtags\_msg"     | Name of the message buffer which a reference list is printed to|
+|CXXTAGS\_DbManager    | "cxxtags\_db\_manager" | Location of *cxxtags\_db\_manager* command. |
 
 This script can be configured by changing these variables. Use *let* command to set value to these variables like below.
 
