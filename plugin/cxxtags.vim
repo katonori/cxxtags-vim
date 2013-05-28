@@ -34,7 +34,7 @@ endfunction
 
 call s:setInitValueStr("g:CXXTAGS_MsgBufName", "cxxtags_msg")
 call s:setInitValueStr("g:CXXTAGS_Cmd", "cxxtags_query")
-call s:setInitValueStr("g:CXXTAGS_DatabaseDir", "./db")
+call s:setInitValueStr("g:CXXTAGS_DatabaseDir", "db")
 call s:setInitValueStr("g:CXXTAGS_DbManager", "cxxtags_db_manager")
 if !exists("g:CXXTAGS_Debug")
     let g:CXXTAGS_Debug = 0
