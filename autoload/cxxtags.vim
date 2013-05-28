@@ -345,6 +345,32 @@ function! cxxtags#PrintTypeInfo()
 endfunction
 
 "
+" Search & guess database directory from g:CXXTAGS_DatabaseDir definition and
+" current directory.
+"
+function! cxxtags#SearchDb()
+    let l:dbName = fnamemodify(g:CXXTAGS_DatabaseDir, ":t")
+    let l:path = expand("%:p:h")
+    let l:pathPrev = ""
+    let l:pathRoot = "/"
+    while 1
+        let l:dbPath = l:path . "/" . l:dbName
+        if isdirectory(l:dbPath)
+            " found
+            let g:CXXTAGS_DatabaseDir = l:dbPath
+            echo "database dir was found: " . l:dbPath
+            break
+        endif
+        " next path
+        let l:pathPrev = l:path
+        let l:path = fnamemodify(l:path, ":h")
+        if l:path == l:pathPrev
+            break
+        endif
+    endwhile
+endfunction
+
+"
 " print all references to a message buffer
 "
 function! cxxtags#PrintAllReferences()

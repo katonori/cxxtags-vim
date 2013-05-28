@@ -32,6 +32,7 @@ Commands
 |CxxtagsListTypeInfo|Show type information of an item|
 |CxxtagsUpdateDbFile|Update a database file of the source file opened in current buffer.|
 |CxxtagsCloseMsgBuf| Close the message buffer. |
+|CxxtagsSearchDb | Guess database directory from *CXXTAGS\_DatabaseDir* value. Move upward from current directory to root directory and check if the directory that name is the same as the one specified in *CXXTAGS\_DatabaseDir* exists. |
 
 Key maps
 ------
