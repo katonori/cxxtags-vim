@@ -106,7 +106,7 @@ function! s:jumpToTag(table, kind)
 
     let l:cmd = g:CXXTAGS_Cmd . " " . a:table . " " . g:CXXTAGS_DatabaseDir . " " . s:curSrcFilename . " " . s:curSrcLineNo . " " . s:curSrcColNo
     if g:CXXTAGS_Debug != 0
-        echo l:cmd
+        echo "DBG: " . l:cmd
     endif
     let l:result = substitute(system(l:cmd), "\n", "", "g")
     if v:shell_error != 0
@@ -116,6 +116,7 @@ function! s:jumpToTag(table, kind)
     let l:resultList = split(l:result, "|")
     if len(l:resultList) == 0
         echo a:kind . " is not found.: " . s:curWord
+        echo "command: " . l:cmd
     else
         execute ":e " . l:resultList[s:COL_FILE_NAME]
         call cursor(l:resultList[s:COL_LINE_NO], l:resultList[s:COL_COL_NO])
@@ -213,7 +214,7 @@ function! cxxtags#PrintAllResults(table, kind)
     let l:colDigits = s:getDigits(l:maxColNoLen)
     let l:i = 0
     while l:i < len(l:fileList)
-        let l:msgLine = printf("%-" . l:maxFileNameLen . "s:%" . l:lineDigits . "d,%" . l:colDigits . "d:%s", l:fileList[i], l:lineNoList[i], l:colNoList[i], l:lineOfSrcList[i])
+        let l:msgLine = printf("%s:%d:%d:%s", l:fileList[i], l:lineNoList[i], l:colNoList[i], l:lineOfSrcList[i])
         call add(l:msg, substitute(l:msgLine, "\n", "", "g"))
         let i += 1
     endwhile
@@ -222,15 +223,9 @@ function! cxxtags#PrintAllResults(table, kind)
         echo "No " . a:kind . " are found.: " . s:curWord
     else
         " add the current position to jumplist
-        exec "normal L"
-        let s:winNumMsgBuf = bufwinnr(g:CXXTAGS_MsgBufName)
-        let s:winNumSrcFile = winnr()
-        if s:winNumMsgBuf == -1
-            call s:openMsgBuf()
-        endif
-        exec s:winNumMsgBuf . "wincmd w"
-        " output message
-        call s:updateMsgBuf(l:msg)
+        setlocal errorformat=%f:%l:%c:%m
+        cexpr l:msg
+        copen
     endif
 endfunction
 
