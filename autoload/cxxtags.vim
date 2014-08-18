@@ -102,7 +102,7 @@ function! s:jumpToTag(table, kind)
         return
     endif
     call s:getCurPos()
-    call cxxtags#updateDbFile(0)
+    "call cxxtags#updateDbFile(0)
 
     let l:cmd = g:CXXTAGS_Cmd . " " . a:table . " " . g:CXXTAGS_DatabaseDir . " " . s:curSrcFilename . " " . s:curSrcLineNo . " " . s:curSrcColNo
     if g:CXXTAGS_Debug != 0
@@ -162,7 +162,7 @@ function! cxxtags#PrintAllResults(table, kind)
         return
     endif
     call s:getCurPos()
-    call cxxtags#updateDbFile(0)
+    "call cxxtags#updateDbFile(0)
 
     let l:cmd = g:CXXTAGS_Cmd . " " . a:table . " " . g:CXXTAGS_DatabaseDir . " " . s:curSrcFilename . " " . s:curSrcLineNo . " " . s:curSrcColNo
     if g:CXXTAGS_Debug != 0
@@ -237,7 +237,7 @@ function! cxxtags#PrintTypeInfo()
         return
     endif
     call s:getCurPos()
-    call cxxtags#updateDbFile(0)
+    "call cxxtags#updateDbFile(0)
 
     let l:cmd = g:CXXTAGS_Cmd . " type " . g:CXXTAGS_DatabaseDir . " " . s:curSrcFilename . " " . s:curSrcLineNo . " " . s:curSrcColNo
     if g:CXXTAGS_Debug != 0
