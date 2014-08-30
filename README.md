@@ -63,7 +63,7 @@ Variables
 
 |Name                 | Default value     | Description |
 | ------------------- | ----------------- | ----------- |
-|CXXTAGS\_DatabaseDir  | "./db"            | Path to a cxxtags database directory. |
+|CXXTAGS\_DatabaseDir  | "./\_db"            | Path to a cxxtags database directory. |
 |CXXTAGS\_Cmd          | "cxxtags\_query"   | Location of *cxxtags\_query* command. This default value assumes *cxxtags\_query* to be under the serach path. Absolute path to *cxxtags\_query* is also acceptable.|
 |CXXTAGS\_MsgBufName   | "cxxtags\_msg"     | Name of the message buffer which a reference list is printed to|
 |CXXTAGS\_DbManager    | "cxxtags\_db\_manager" | Location of *cxxtags\_db\_manager* command. |
