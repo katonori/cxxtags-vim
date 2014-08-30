@@ -221,6 +221,7 @@ function! cxxtags#PrintAllResults(table, kind)
 
     if len(l:msg) == 0
         echo "No " . a:kind . " are found.: " . s:curWord
+        cexpr ""
     else
         " add the current position to jumplist
         setlocal errorformat=%f:%l:%c:%m
