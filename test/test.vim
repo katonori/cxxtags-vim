@@ -14,7 +14,7 @@ let s:refPosOverrideN = []
 let s:logName = "test.log"
 
 function! s:init()
-    let l:fileName = expand("%:p")
+    let l:fileName = expand("%")
     "
     " declarations
     "
@@ -38,8 +38,8 @@ function! s:init()
     "
     call add(s:inDatasRef, { 'line':8, 'col':18 })
     let l:tmpList = []
-    call add(l:tmpList, l:fileName . ":68, 8:    a->response();")
-    call add(l:tmpList, l:fileName . ":77,12:    parent.response();")
+    call add(l:tmpList, l:fileName . "|77 col 12| parent.response();")
+    call add(l:tmpList, l:fileName . "|68 col 8| a->response();")
     call add(s:refDatasRef, l:tmpList)
     let l:tmpList = []
     call add(l:tmpList, { 'line':68, 'col':8 })
@@ -48,7 +48,7 @@ function! s:init()
 
     call add(s:inDatasRef, { 'line':36, 'col':14 })
     let l:tmpList = []
-    call add(l:tmpList, l:fileName . ":78,11:    child.response();")
+    call add(l:tmpList, l:fileName . "|78 col 11| child.response();")
     call add(s:refDatasRef, l:tmpList)
     let l:tmpList = []
     call add(l:tmpList, { 'line':78, 'col':11 })
@@ -59,8 +59,8 @@ function! s:init()
     "
     call add(s:inDatasOverride, { 'line':46, 'col':18 })
     let l:tmpList = []
-    call add(l:tmpList, l:fileName . ":33,18:    virtual void response(void);")
-    call add(l:tmpList, l:fileName . ":36,14:void CChild::response(void) {")
+    call add(l:tmpList, l:fileName . "|33 col 18| virtual void response(void);")
+    "call add(l:tmpList, l:fileName . "|36 col 14|void CChild::response(void) {")
     call add(s:refDatasOverride, l:tmpList)
     let l:tmpList = []
     call add(l:tmpList, { 'line':33, 'col':18 })
@@ -69,10 +69,10 @@ function! s:init()
 
     call add(s:inDatasOverride, { 'line':62, 'col':14 })
     let l:tmpList = []
-    call add(l:tmpList, l:fileName . ": 8,18:    virtual void response(void);")
-    call add(l:tmpList, l:fileName . ":11,16:void CParent0::response(void) {")
-    call add(l:tmpList, l:fileName . ":20,18:    virtual void response(void);")
-    call add(l:tmpList, l:fileName . ":23,16:void CParent1::response(void) {")
+    call add(l:tmpList, l:fileName . "|8 col 18| virtual void response(void);")
+    "call add(l:tmpList, l:fileName . ":11,16:void CParent0::response(void) {")
+    call add(l:tmpList, l:fileName . "|20 col 18| virtual void response(void);")
+    "call add(l:tmpList, l:fileName . ":23,16:void CParent1::response(void) {")
     call add(s:refDatasOverride, l:tmpList)
     let l:tmpList = []
     call add(l:tmpList, { 'line':8, 'col':18 })
@@ -86,10 +86,10 @@ function! s:init()
     "
     call add(s:inDatasOverrideN, { 'line':8, 'col':18 })
     let l:tmpList = []
-    call add(l:tmpList, l:fileName . ":33,18:    virtual void response(void);")
-    call add(l:tmpList, l:fileName . ":36,14:void CChild::response(void) {")
-    call add(l:tmpList, l:fileName . ":59,18:    virtual void response(void);")
-    call add(l:tmpList, l:fileName . ":62,14:void COther::response(void) {")
+    call add(l:tmpList, l:fileName . "|33 col 18| virtual void response(void);")
+    call add(l:tmpList, l:fileName . "|36 col 14| void CChild::response(void) {")
+    call add(l:tmpList, l:fileName . "|59 col 18| virtual void response(void);")
+    call add(l:tmpList, l:fileName . "|62 col 14| void COther::response(void) {")
     call add(s:refDatasOverrideN, l:tmpList)
     let l:tmpList = []
     call add(l:tmpList, { 'line':33, 'col':18 })
@@ -100,8 +100,8 @@ function! s:init()
 
     call add(s:inDatasOverrideN, { 'line':78, 'col':11 })
     let l:tmpList = []
-    call add(l:tmpList, l:fileName . ":46,18:    virtual void response(void);")
-    call add(l:tmpList, l:fileName . ":49,15:void CGChild::response(void) {")
+    call add(l:tmpList, l:fileName . "|46 col 18| virtual void response(void);")
+    call add(l:tmpList, l:fileName . "|49 col 15| void CGChild::response(void) {")
     call add(s:refDatasOverrideN, l:tmpList)
     let l:tmpList = []
     call add(l:tmpList, { 'line':46, 'col':18 })
@@ -165,9 +165,10 @@ function! s:testList(cmd, inDatas, refDatas, refPosDatas)
     echo "test: " . a:cmd . ": " . len(a:inDatas)
     while l:i < len(a:refDatas)
         call cursor(a:inDatas[l:i].line, a:inDatas[l:i].col)
+        echo "pos: " . a:inDatas[l:i].line . "," . a:inDatas[l:i].col
         exec a:cmd
         let l:lines = getline(0, line("$"))
-        let l:numLines = len(l:lines) - 2
+        let l:numLines = len(l:lines)
         let l:numLinesRef = len(a:refDatas[l:i])
         if l:numLines != l:numLinesRef
             echo "ERROR: the number of result: act=" . l:numLines . ", ref=" . l:numLinesRef
@@ -176,20 +177,21 @@ function! s:testList(cmd, inDatas, refDatas, refPosDatas)
 
         let l:ln = 0
         while l:ln < l:numLines
-            if l:lines[l:ln+1] != a:refDatas[l:i][l:ln]
+            if l:lines[l:ln] != a:refDatas[l:i][l:ln]
                 echo "ERROR: refs:"
-                echo l:lines[l:ln+1]
+                echo l:lines[l:ln]
                 echo a:refDatas[l:i][l:ln]
                 let s:err += 1
                 echo "NG"
             else
                 echo "OK"
             endif
-            call s:testOpenSrcFromMsgBuf(a:refPosDatas[l:i][l:ln])
+            "call s:testOpenSrcFromMsgBuf(a:refPosDatas[l:i][l:ln])
             let l:ln += 1
         endwhile
         " close buffer
-        exec "CxxtagsCloseMsgBuf"
+        "exec "CxxtagsCloseMsgBuf"
+        exec ":cclose"
         let l:i += 1
     endwhile
 endfunction
@@ -241,7 +243,7 @@ function! s:run()
     " overriden test
     call s:testList("CxxtagsListOverriden", s:inDatasOverrideN, s:refDatasOverrideN, s:refPosOverrideN)
     " close test
-    call s:testClose()
+    "call s:testClose()
 
     if s:err != 0
         exec "cq"
