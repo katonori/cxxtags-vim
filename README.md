@@ -9,16 +9,23 @@ What is this?
 * Jump to a definition
 * List all the references
 * List all the overrides/overriden information
-* Show type information(members, methods and base classes)
 
 Requirement
 ------
-**cxxtags** ver3.0b or higher
+[**cxxtags**](https://github.com/katonori/cxxtags)
 
 How to install
 ------
-Copy *plugin* and *autoload* directory to your vim script directory.
-Or type `make install` to install these scripts to `~/.vim`. 
+Use [Vundle](https://github.com/gmarik/Vundle.vim) or [pathogen](https://github.com/tpope/vim-pathogen) or similar vim plugin management system.
+
+If you use Vundle, Add the line below to your ~/.vimrc.
+
+        Bundle 'katonori/cxxtags-vim'
+
+If you use pathogen, clone the repository to your bundle directory.
+
+        cd ~/.vim/bundle/
+        git clone https://github.com/katonori/cxxtags-vim
 
 Commands
 ------
@@ -29,22 +36,10 @@ Commands
 |CxxtagsListRefs   | List all the references to an item under the cursor to the message buffer.|
 |CxxtagsListOverride  | List all the items which an item under the cursor overrides.|
 |CxxtagsListOverriden | List all the items overriden by an item under the cursor.|
-|CxxtagsListTypeInfo|Show type information of an item|
 |CxxtagsUpdateDbFile|Update a database file of the source file opened in current buffer.|
-|CxxtagsCloseMsgBuf| Close the message buffer. |
-|CxxtagsSearchDb | Guess database directory from *CXXTAGS\_DatabaseDir* value. Move upward from current directory to root directory and check if the directory that name is the same as the one specified in *CXXTAGS\_DatabaseDir* exists. |
 
 Key maps
 ------
-### Message Buffer
-These key mappings are set in message buffer.
-
-| Map          | Description            |
-| ------------ | ------------------ |
-|\<CR\> | Display a location a listed item mentions about. |
-|q | Close the message buffer. |
-|b | Back to the original location in a source file. |
-
 ### Normal mode
 Key mapping are not set for normal mode by default. Please set by yourself.
 These are key mapping example. Copy & paste these lines to your `~/.vimrc.`
@@ -65,8 +60,6 @@ Variables
 | ------------------- | ----------------- | ----------- |
 |CXXTAGS\_DatabaseDir  | "./\_db"            | Path to a cxxtags database directory. |
 |CXXTAGS\_Cmd          | "cxxtags\_query"   | Location of *cxxtags\_query* command. This default value assumes *cxxtags\_query* to be under the serach path. Absolute path to *cxxtags\_query* is also acceptable.|
-|CXXTAGS\_MsgBufName   | "cxxtags\_msg"     | Name of the message buffer which a reference list is printed to|
-|CXXTAGS\_DbManager    | "cxxtags\_db\_manager" | Location of *cxxtags\_db\_manager* command. |
 
 This script can be configured by changing these variables. Use *let* command to set value to these variables like below.
 
