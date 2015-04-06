@@ -63,9 +63,7 @@ let s:COL_TYPE_KIND = 4
 " update a database file
 "
 function! cxxtags#updateDbFile()
-    if s:curSrcFilename == ""
-        call s:getCurPos()
-    endif
+    call s:getCurPos()
     let l:cmd = g:CXXTAGS_Cmd . " rebuild " . g:CXXTAGS_DatabaseDir . " " . s:curSrcFilename
     if g:CXXTAGS_Debug != 0
         echo l:cmd
