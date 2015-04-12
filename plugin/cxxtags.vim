@@ -68,9 +68,10 @@ function! cxxtags#updateDbFile()
     if g:CXXTAGS_Debug != 0
         echo l:cmd
     endif
-    call system(l:cmd)
+    let l:out = system(l:cmd)
     if v:shell_error != 0
         echo "ERROR: command execution failed.: " . l:cmd
+        echo l:out
         return
     endif
 endfunction
