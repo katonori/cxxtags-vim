@@ -137,19 +137,22 @@ function! s:jumpToTag(table, kind)
     if g:CXXTAGS_Debug != 0
         echo "DBG: " . l:cmd
     endif
-    let l:result = substitute(system(l:cmd), "\n", "", "g")
+    let l:resultList = split(system(l:cmd), "\n")
     if v:shell_error != 0
         echo "ERROR: command execution failed.: " . l:cmd
         return
     endif
-    let l:resultList = split(l:result, "|")
     if len(l:resultList) == 0
         echo a:kind . " is not found.: " . s:curWord
         echo "command: " . l:cmd
-    else
-        execute ":e " . l:resultList[s:COL_FILE_NAME]
-        call cursor(l:resultList[s:COL_LINE_NO], l:resultList[s:COL_COL_NO])
+    elseif len(l:resultList) == 1
+        let l:row = split(l:resultList[0], "|")
+        execute ":e " . l:row[s:COL_FILE_NAME]
+        call cursor(l:row[s:COL_LINE_NO], l:row[s:COL_COL_NO])
         execute ":normal zz"
+    else
+        let l:resRows = s:parseResult(l:resultList)
+        call s:openQuickFix(l:resRows)
     endif
 endfunction
 
@@ -181,27 +184,7 @@ function! s:getDigits(val)
     return l:digits
 endfunction
 
-let s:winNumMsgBuf = 0
-let s:winNumSrcFile = 0
-"
-" list query results
-"
-function! cxxtags#PrintAllResults(table, kind)
-    if 0 != s:checkEnv()
-        return
-    endif
-    call s:getCurPos()
-    "call cxxtags#updateDbFile(0)
-
-    let l:cmd = g:CXXTAGS_Cmd . " " . a:table . " " . g:CXXTAGS_DatabaseDir . " " . s:curSrcFilename . " " . s:curSrcLineNo . " " . s:curSrcColNo
-    if g:CXXTAGS_Debug != 0
-        echo l:cmd
-    endif
-    let l:resultList = split(system(l:cmd), "\n")
-    if v:shell_error != 0
-        echo "ERROR: command execution failed.: " . l:cmd
-        return
-    endif
+function! s:parseResult(resultList)
     let l:maxFileNameLen = 0
     let l:maxLineNoLen = 0
     let l:maxColNoLen = 0
@@ -210,7 +193,7 @@ function! cxxtags#PrintAllResults(table, kind)
     let l:colNoList = []
     let l:lineOfSrcList = []
 
-    for l:result in resultList
+    for l:result in a:resultList
         let l:columns = split(l:result, "|", 1)
         " get a line from a source file
         let l:lineBuf = readfile(l:columns[s:COL_FILE_NAME])
@@ -235,8 +218,6 @@ function! cxxtags#PrintAllResults(table, kind)
         call add(l:colNoList, l:columns[s:COL_COL_NO])
         call add(l:lineOfSrcList, l:lineOfSrc)
     endfor
-
-    " decide the number of digits for printing
     let l:msg = []
     let l:msgLine = ""
     let l:lineDigits = s:getDigits(l:maxLineNoLen)
@@ -247,16 +228,45 @@ function! cxxtags#PrintAllResults(table, kind)
         call add(l:msg, substitute(l:msgLine, "\n", "", "g"))
         let i += 1
     endwhile
+    return l:msg
+endfunction
 
-    if len(l:msg) == 0
+function s:openQuickFix(resRows)
+    if len(a:resRows) == 0
         echo "No " . a:kind . " are found.: " . s:curWord
         cexpr ""
     else
         " add the current position to jumplist
         setlocal errorformat=%f:%l:%c:%m
-        cexpr l:msg
+        cexpr a:resRows
         copen
     endif
+endfunction
+
+let s:winNumMsgBuf = 0
+let s:winNumSrcFile = 0
+"
+" list query results
+"
+function! cxxtags#PrintAllResults(table, kind)
+    if 0 != s:checkEnv()
+        return
+    endif
+    call s:getCurPos()
+    "call cxxtags#updateDbFile(0)
+
+    let l:cmd = g:CXXTAGS_Cmd . " " . a:table . " " . g:CXXTAGS_DatabaseDir . " " . s:curSrcFilename . " " . s:curSrcLineNo . " " . s:curSrcColNo
+    if g:CXXTAGS_Debug != 0
+        echo l:cmd
+    endif
+    let l:resultList = split(system(l:cmd), "\n")
+    if v:shell_error != 0
+        echo "ERROR: command execution failed.: " . l:cmd
+        return
+    endif
+
+    let l:resRows = s:parseResult(l:resultList)
+    call s:openQuickFix(l:resRows)
 endfunction
 
 "
