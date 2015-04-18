@@ -232,10 +232,7 @@ function! s:parseResult(resultList)
 endfunction
 
 function s:openQuickFix(resRows)
-    if len(a:resRows) == 0
-        echo "No " . a:kind . " are found.: " . s:curWord
-        cexpr ""
-    else
+    if len(a:resRows) != 0
         " add the current position to jumplist
         setlocal errorformat=%f:%l:%c:%m
         cexpr a:resRows
@@ -266,6 +263,10 @@ function! cxxtags#PrintAllResults(table, kind)
     endif
 
     let l:resRows = s:parseResult(l:resultList)
+    if len(l:resRows) == 0
+        echo "No " . a:kind . " are found.: " . s:curWord
+        cexpr ""
+    endif
     call s:openQuickFix(l:resRows)
 endfunction
 
