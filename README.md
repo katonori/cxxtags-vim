@@ -29,14 +29,14 @@ If you use pathogen, clone the repository to your bundle directory.
 
 Commands
 ------
-|Name              | Description |
-| ---------------- | ------------------- |
-|CxxtagsOpenDecl   | Jump to the declaration of an item under the cursor.|
-|CxxtagsOpenDef    | Jump to the definition of an item under the cursor.|
-|CxxtagsListRefs   | List all the references to an item under the cursor to the message buffer.|
-|CxxtagsListOverride  | List all the items which an item under the cursor overrides.|
-|CxxtagsListOverriden | List all the items overriden by an item under the cursor.|
-|CxxtagsUpdateDbFile|Update a database file of the source file opened in current buffer.|
+|Name                   | Description           |
+| --------------------- | --------------------- |
+|CxxtagsOpenDecl        | Jump to the declaration of an item under the cursor.|
+|CxxtagsOpenDef         | Jump to the definition of an item under the cursor.|
+|CxxtagsListRefs        | List all the references to an item under the cursor to the message buffer.|
+|CxxtagsListOverride    | List all the items which an item under the cursor overrides.|
+|CxxtagsListOverriden   | List all the items overriden by an item under the cursor.|
+|CxxtagsUpdateDbFile    |Update a database file of the source file opened in current buffer.|
 
 Key maps
 ------
@@ -60,8 +60,3 @@ Variables
 | ------------------- | ----------------- | ----------- |
 |CXXTAGS\_DatabaseDir  | "./\_db"            | Path to a cxxtags database directory. |
 |CXXTAGS\_Cmd          | "cxxtags\_query"   | Location of *cxxtags\_query* command. This default value assumes *cxxtags\_query* to be under the serach path. Absolute path to *cxxtags\_query* is also acceptable.|
-
-This script can be configured by changing these variables. Use *let* command to set value to these variables like below.
-
-     let CXXTAGS_DatabaseDir = "./tag_db"
-
