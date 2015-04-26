@@ -87,11 +87,6 @@ endfunction
 " check database directory
 "
 function! s:checkEnv()
-    if !isdirectory(g:CXXTAGS_DatabaseDir)
-        echo "ERROR: cxxtags database \"" . g:CXXTAGS_DatabaseDir . "\" is not found."
-        return 1
-    endif
-
     " check if the query command is under search path.
     let l:cmd = "which " . g:CXXTAGS_Cmd
     let l:result = system("which " . g:CXXTAGS_Cmd)
