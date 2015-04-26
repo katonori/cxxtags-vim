@@ -58,5 +58,5 @@ Variables
 
 |Name                 | Default value     | Description |
 | ------------------- | ----------------- | ----------- |
-|CXXTAGS\_DatabaseDir  | "./\_db"            | Path to a cxxtags database directory. |
+|CXXTAGS\_DatabaseDir  | "./\_db"            | Path to a cxxtags database directory. You can specify multiple database directory separated by ','. |
 |CXXTAGS\_Cmd          | "cxxtags\_query"   | Location of *cxxtags\_query* command. This default value assumes *cxxtags\_query* to be under the serach path. Absolute path to *cxxtags\_query* is also acceptable.|
