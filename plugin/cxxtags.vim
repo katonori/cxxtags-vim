@@ -226,7 +226,7 @@ function! s:parseResult(resultList)
     return l:msg
 endfunction
 
-function s:openQuickFix(resRows)
+function! s:openQuickFix(resRows)
     if len(a:resRows) != 0
         " add the current position to jumplist
         setlocal errorformat=%f:%l:%c:%m
