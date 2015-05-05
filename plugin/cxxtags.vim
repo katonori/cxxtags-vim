@@ -32,7 +32,6 @@ function! s:setInitValueStr(name, val)
     endif
 endfunction
 
-call s:setInitValueStr("g:CXXTAGS_MsgBufName", "cxxtags_msg")
 call s:setInitValueStr("g:CXXTAGS_Cmd", "cxxtags_query")
 call s:setInitValueStr("g:CXXTAGS_DatabaseDir", "_db")
 if !exists("g:CXXTAGS_Debug")
@@ -45,12 +44,9 @@ endif
 command! -nargs=0 CxxtagsOpenDecl :call cxxtags#JumpToDeclaration()
 command! -nargs=0 CxxtagsListRefs :call cxxtags#PrintAllReferences()
 command! -nargs=0 CxxtagsOpenDef :call cxxtags#JumpToDefinition()
-command! -nargs=0 CxxtagsCloseMsgBuf :call cxxtags#CloseMsgBuf()
 command! -nargs=0 CxxtagsListOverride :call cxxtags#PrintAllOverrides()
 command! -nargs=0 CxxtagsListOverriden :call cxxtags#PrintAllOverrideNs()
-command! -nargs=0 CxxtagsListTypeInfo :call cxxtags#PrintTypeInfo()
 command! -nargs=0 CxxtagsUpdateDbFile :call cxxtags#updateDbFile()
-command! -nargs=0 CxxtagsTagJump :call cxxtags#TagJumpFromMsgBuf()
 command! -nargs=0 CxxtagsSearchDb :call cxxtags#SearchDb()
 
 let s:COL_NAME = 0
@@ -235,8 +231,6 @@ function! s:openQuickFix(resRows)
     endif
 endfunction
 
-let s:winNumMsgBuf = 0
-let s:winNumSrcFile = 0
 "
 " list query results
 "
@@ -263,116 +257,6 @@ function! cxxtags#PrintAllResults(table, kind)
         cexpr ""
     endif
     call s:openQuickFix(l:resRows)
-endfunction
-
-"
-" print type information
-"
-function! cxxtags#PrintTypeInfo()
-    if 0 != s:checkEnv()
-        return
-    endif
-    call s:getCurPos()
-    "call cxxtags#updateDbFile(0)
-
-    let l:cmd = g:CXXTAGS_Cmd . " type " . g:CXXTAGS_DatabaseDir . " " . s:curSrcFilename . " " . s:curSrcLineNo . " " . s:curSrcColNo
-    if g:CXXTAGS_Debug != 0
-        echo l:cmd
-    endif
-    let l:resultList = split(system(l:cmd), "\n")
-    if v:shell_error != 0
-        echo "ERROR: command execution failed.: " . l:cmd
-        return
-    endif
-    let l:maxTypeNameLen = 0
-    let l:maxNameLen = 0
-    let l:maxFileNameLen = 0
-    let l:maxLineNoLen = 0
-    let l:maxColNoLen = 0
-    let l:typeNameList = []
-    let l:nameList = []
-    let l:fileList = []
-    let l:lineNoList = []
-    let l:colNoList = []
-    let l:typeKindList = []
-    let l:lineOfSrcList = []
-    let l:COL_TYPE_TYPE_NAME = 0
-    let l:COL_TYPE_NAME = 1
-    let l:COL_TYPE_FILE_NAME = 2
-    let l:COL_TYPE_LINE_NO = 3
-    let l:COL_TYPE_COL_NO = 4
-    let l:COL_TYPE_KIND = 5
-
-    " parse command output 
-    for l:result in resultList
-        let l:columns = split(l:result, "|", 1)
-        " get a line from a source file
-        let l:lineBuf = readfile(l:columns[l:COL_TYPE_FILE_NAME])
-        let l:lineOfSrc = l:lineBuf[l:columns[l:COL_TYPE_LINE_NO]-1]
-
-        " keep the max number for printing
-        let l:len = strlen(l:columns[l:COL_TYPE_TYPE_NAME])
-        if l:len > l:maxTypeNameLen
-            let l:maxTypeNameLen = l:len
-        endif
-        let l:len = strlen(l:columns[l:COL_TYPE_NAME])
-        if l:len > l:maxNameLen
-            let l:maxNameLen = l:len
-        endif
-        let l:len = strlen(l:columns[l:COL_TYPE_FILE_NAME])
-        if l:len > l:maxFileNameLen
-            let l:maxFileNameLen = l:len
-        endif
-        let l:len = str2nr(l:columns[l:COL_TYPE_LINE_NO], 10)
-        if l:len > l:maxLineNoLen
-            let l:maxLineNoLen = l:len
-        endif
-        let l:len = str2nr(l:columns[l:COL_TYPE_COL_NO], 10)
-        if l:len > l:maxColNoLen
-            let l:maxColNoLen = l:len
-        endif
-
-        if l:columns[l:COL_TYPE_TYPE_NAME] == ""
-            call add(l:typeNameList, "<anonymous>")
-        else
-            call add(l:typeNameList, l:columns[l:COL_TYPE_TYPE_NAME])
-        endif
-        call add(l:nameList, l:columns[l:COL_TYPE_NAME])
-        call add(l:fileList, l:columns[l:COL_TYPE_FILE_NAME])
-        call add(l:lineNoList, l:columns[l:COL_TYPE_LINE_NO])
-        call add(l:colNoList, l:columns[l:COL_TYPE_COL_NO])
-        call add(l:typeKindList, l:columns[l:COL_TYPE_KIND])
-        call add(l:lineOfSrcList, l:lineOfSrc)
-    endfor
-
-    let l:msg = []
-    let l:msgLine = ""
-    " decide the number of digits for printing
-    let l:lineDigits = s:getDigits(l:maxLineNoLen)
-    let l:colDigits = s:getDigits(l:maxColNoLen)
-    let l:i = 0
-    " print to string buff
-    while l:i < len(l:fileList)
-        let l:msgLine = printf("%-" . l:maxFileNameLen . "s:%" . l:lineDigits . "d,%" . l:colDigits . "d:%-" . l:maxTypeNameLen . "s:%-" . l:maxNameLen . "s:%-8s:%s", l:fileList[i], l:lineNoList[i], l:colNoList[i], l:typeNameList[i], l:nameList[i], l:typeKindList[i], l:lineOfSrcList[i])
-        call add(l:msg, substitute(l:msgLine, "\n", "", "g"))
-        let i += 1
-    endwhile
-
-    if len(l:msg) == 0
-        echo "No type info are found.: " . s:curWord
-    else
-        " add the current position to jumplist
-        exec "normal L"
-        " show result
-        let s:winNumMsgBuf = bufwinnr(g:CXXTAGS_MsgBufName)
-        let s:winNumSrcFile = winnr()
-        if s:winNumMsgBuf == -1
-            call s:openMsgBuf()
-        endif
-        exec s:winNumMsgBuf . "wincmd w"
-        " output message
-        call s:updateMsgBuf(l:msg)
-    endif
 endfunction
 
 "
@@ -420,78 +304,4 @@ endfunction
 "
 function! cxxtags#PrintAllOverrides()
     call cxxtags#PrintAllResults("override", "overrides")
-endfunction
-
-"
-" go back original position
-"
-function! cxxtags#goBack()
-    exec s:winNumSrcFile . "wincmd w"
-    exec "e " . s:curSrcFilename
-    call cursor(s:curSrcLineNo, s:curSrcColNo)
-    exec s:winNumMsgBuf . "wincmd w"
-endfunction
-
-"
-" update a message buffer
-"
-function! s:updateMsgBuf(inMsg)
-    setlocal modifiable
-    setlocal noreadonly
-    silent! %delete _
-    let l:msg = sort(a:inMsg)
-    let l:firstLine = ["[go back]"]
-    call append(0, l:firstLine)
-    call append(1, l:msg)
-    exec "0"
-    setlocal nomodifiable
-    setlocal readonly
-endfunction
-
-"
-" open a message buffer
-"
-function! s:openMsgBuf()
-    execute "bo 10new " . g:CXXTAGS_MsgBufName
-    execute "set buftype=nofile"
-    execute "set filetype=cpp"
-    setlocal nonumber
-    let s:winNumMsgBuf = bufwinnr(g:CXXTAGS_MsgBufName)
-    nnoremap <buffer> <CR> :CxxtagsTagJump<CR>
-    nnoremap <buffer> q :call cxxtags#CloseMsgBuf()<CR>
-    nnoremap <buffer> b :call cxxtags#goBack()<CR>
-endfunction
-
-"
-" perform tag jump
-"
-function! cxxtags#TagJumpFromMsgBuf()
-    let l:pos = getpos(".")
-    let l:lineNo = l:pos[1]
-    if l:lineNo == 1
-        call s:openSrcFileFromMsgBuf(s:curSrcFilename, s:curSrcLineNo, s:curSrcColNo)
-    else
-        let l:line = getline(".")
-        let l:fileName = matchstr(l:line, '^\zs[^:]\+\ze:')
-        let l:lineNo = matchstr(l:line, ':\s*\zs[0-9]\+\ze,')
-        let l:colNo = matchstr(l:line, ',\s*\zs[0-9]\+\ze:')
-        call s:openSrcFileFromMsgBuf(l:fileName, l:lineNo, l:colNo)
-    endif
-    exec s:winNumMsgBuf . "wincmd w"
-endfunction
-
-function! s:openSrcFileFromMsgBuf(fileName, lineNo, colNo)
-    exec s:winNumSrcFile . "wincmd w"
-    exec "e " . a:fileName
-    exec "call cursor(" . a:lineNo . "," . a:colNo .")"
-    exec "normal zz"
-endfunction
-
-"
-" close a message buffer
-"
-function! cxxtags#CloseMsgBuf()
-    exec s:winNumMsgBuf . "wincmd w"
-    exec "wincmd c"
-    exec s:winNumSrcFile . "wincmd w"
 endfunction

@@ -33,7 +33,7 @@ Commands
 | --------------------- | --------------------- |
 |CxxtagsOpenDecl        | Jump to the declaration of an item under the cursor.|
 |CxxtagsOpenDef         | Jump to the definition of an item under the cursor.|
-|CxxtagsListRefs        | List all the references to an item under the cursor to the message buffer.|
+|CxxtagsListRefs        | List all the references to an item under the cursor to the quickfix window.|
 |CxxtagsListOverride    | List all the items which an item under the cursor overrides.|
 |CxxtagsListOverriden   | List all the items overriden by an item under the cursor.|
 |CxxtagsUpdateDbFile    |Update a database file of the source file opened in current buffer.|
@@ -47,7 +47,6 @@ These are key mapping example. Copy & paste these lines to your `~/.vimrc.`
     nnoremap <unique> <silent> <leader>d :CxxtagsOpenDecl<CR>
     nnoremap <unique> <silent> <leader>r :CxxtagsListRefs<CR>
     nnoremap <unique> <silent> <leader>D :CxxtagsOpenDef<CR>
-    nnoremap <unique> <silent> <leader>q :CxxtagsCloseMsgBuf<CR>
     nnoremap <unique> <silent> <leader>o :CxxtagsListOverride<CR>
     nnoremap <unique> <silent> <leader>O :CxxtagsListOverriden<CR>
     nnoremap <unique> <silent> <leader>t :CxxtagsListTypeInfo<CR>
