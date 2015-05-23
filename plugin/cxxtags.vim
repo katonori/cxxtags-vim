@@ -48,12 +48,51 @@ command! -nargs=0 CxxtagsListOverride :call cxxtags#PrintAllOverrides()
 command! -nargs=0 CxxtagsListOverriden :call cxxtags#PrintAllOverrideNs()
 command! -nargs=0 CxxtagsUpdateDbFile :call cxxtags#updateDbFile()
 command! -nargs=0 CxxtagsSearchDb :call cxxtags#SearchDb()
+command! -nargs=0 CxxtagsSubmitUpdate :call cxxtags#submitUpdateDbFile()
 
 let s:COL_NAME = 0
 let s:COL_FILE_NAME = 1
 let s:COL_LINE_NO = 2
 let s:COL_COL_NO = 3
 let s:COL_TYPE_KIND = 4
+
+"
+" submit update command to condor
+"
+function! cxxtags#submitUpdateDbFile()
+    call s:getCurPos()
+    let l:cmd_file = tempname()
+    let l:job_file = tempname()
+    let l:lines = []
+    let l:cmd = g:CXXTAGS_Cmd . " -v rebuild " . g:CXXTAGS_DatabaseDir . " " . s:curSrcFilename
+    call add(l:lines, l:cmd)
+    let l:sock_path = substitute(system("echo ${TMUX} | cut -f 1 -d ','"), "\n", "", "g")
+    call add(l:lines, "tmux -S " . l:sock_path . " display-message \"" . l:cmd_file . "\"")
+    "echo l:sock_path
+    call writefile(l:lines, l:cmd_file)
+
+    let l:lines = []
+    call add(l:lines, 'Universe   = local')
+    call add(l:lines, 'Executable = /bin/bash')
+    call add(l:lines, 'Arguments  = ' . l:cmd_file )
+    call add(l:lines, 'Log        = /tmp/cxxtags_condor.log')
+    call add(l:lines, 'Output     = /tmp/cxxtags_condor.out')
+    call add(l:lines, 'Error      = /tmp/cxxtags_condor.error')
+    call add(l:lines, 'Notification = Error')
+    call add(l:lines, 'GetEnv      = True')
+    call add(l:lines, 'Queue')
+    call writefile(l:lines, l:job_file)
+
+    if g:CXXTAGS_Debug != 0
+        echo l:cmd
+    endif
+    let l:out = system("condor_submit " . l:job_file)
+    if v:shell_error != 0
+        echo "ERROR: command execution failed.: " . l:cmd
+        echo l:out
+        return
+    endif
+endfunction
 
 "
 " update a database file
