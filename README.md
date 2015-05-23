@@ -36,7 +36,7 @@ Commands
 |CxxtagsListRefs        | List all the references to an item under the cursor to the quickfix window.|
 |CxxtagsListOverride    | List all the items which an item under the cursor overrides.|
 |CxxtagsListOverriden   | List all the items overriden by an item under the cursor.|
-|CxxtagsUpdateDbFile    |Update a database file of the source file opened in current buffer.|
+|CxxtagsSubmitUpdate    | Submit a job for updating the information about the current editing file to [HTCondor](http://research.cs.wisc.edu/htcondor/). This is useful for an automatic update of your database.|
 
 Key maps
 ------
@@ -59,3 +59,12 @@ Variables
 | ------------------- | ----------------- | ----------- |
 |CXXTAGS\_DatabaseDir  | "./\_db"            | Path to a cxxtags database directory. You can specify multiple database directory separated by ','. |
 |CXXTAGS\_Cmd          | "cxxtags\_query"   | Location of *cxxtags\_query* command. This default value assumes *cxxtags\_query* to be under the serach path. Absolute path to *cxxtags\_query* is also acceptable.|
+
+Other Setups
+------
+
+* If you want to update you database automatically this setting may helps you.
+  Of course youo need to setup [HTCondor](http://research.cs.wisc.edu/htcondor/) in advance.
+
+        autocmd BufWritePost *.{c,cpp,h,hpp} :CxxtagsSubmitUpdate
+
