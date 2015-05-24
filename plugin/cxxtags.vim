@@ -49,7 +49,7 @@ command! -nargs=0 CxxtagsListOverriden :call cxxtags#PrintAllOverrideNs()
 command! -nargs=0 CxxtagsUpdateDbFile :call cxxtags#updateDbFile()
 command! -nargs=0 CxxtagsSearchDb :call cxxtags#SearchDb()
 command! -nargs=0 CxxtagsSubmitUpdate :call cxxtags#submitUpdateDbFile()
-command! -nargs=0 CxxtagsShowInclusion :call cxxtags#QueryInclusion()
+command! -nargs=0 CxxtagsOpenIncludedFile :call cxxtags#OpenIncludedFile()
 
 let s:COL_NAME = 0
 let s:COL_FILE_NAME = 1
@@ -272,7 +272,7 @@ endfunction
 "
 " query about inclusion
 "
-function! cxxtags#QueryInclusion()
+function! cxxtags#OpenIncludedFile()
     if 0 != s:checkEnv()
         return
     endif
@@ -292,11 +292,7 @@ function! cxxtags#QueryInclusion()
         echo "No inclusion are found.: " . s:curSrcFilename . ":" . s:curSrcLineNo
         cexpr ""
     else
-        let l:tmp_efm = &efm
-        let &efm="%f"
-        cexpr l:result
-        copen
-        let &efm = l:tmp_efm
+        execute(":e " . l:result)
     endif
 endfunction
 
