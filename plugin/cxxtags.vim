@@ -49,6 +49,7 @@ command! -nargs=0 CxxtagsListOverriden :call cxxtags#PrintAllOverrideNs()
 command! -nargs=0 CxxtagsUpdateDbFile :call cxxtags#updateDbFile()
 command! -nargs=0 CxxtagsSearchDb :call cxxtags#SearchDb()
 command! -nargs=0 CxxtagsSubmitUpdate :call cxxtags#submitUpdateDbFile()
+command! -nargs=0 CxxtagsShowInclusion :call cxxtags#QueryInclusion()
 
 let s:COL_NAME = 0
 let s:COL_FILE_NAME = 1
@@ -232,10 +233,11 @@ endfunction
 
 function! s:openQuickFix(resRows)
     if len(a:resRows) != 0
-        " add the current position to jumplist
-        setlocal errorformat=%f:%l:%c:%m
+        let l:tmp_efm = &efm
+        let &efm="%f:%l:%c:%m"
         cexpr a:resRows
         copen
+        let &efm=l:tmp_efm
     endif
 endfunction
 
@@ -265,6 +267,37 @@ function! cxxtags#PrintAllResults(table, kind)
         cexpr ""
     endif
     call s:openQuickFix(l:resRows)
+endfunction
+
+"
+" query about inclusion
+"
+function! cxxtags#QueryInclusion()
+    if 0 != s:checkEnv()
+        return
+    endif
+    call s:getCurPos()
+
+    let l:cmd = g:CXXTAGS_Cmd . " include " . g:CXXTAGS_DatabaseDir . " " . s:curSrcFilename . " " . s:curSrcLineNo
+    if g:CXXTAGS_Debug != 0
+        echo l:cmd
+    endif
+    let l:result = system(l:cmd)
+    if v:shell_error != 0
+        echo "ERROR: command execution failed.: " . l:cmd
+        return
+    endif
+
+    if len(l:result) == 0
+        echo "No inclusion are found.: " . s:curSrcFilename . ":" . s:curSrcLineNo
+        cexpr ""
+    else
+        let l:tmp_efm = &efm
+        let &efm="%f"
+        cexpr l:result
+        copen
+        let &efm = l:tmp_efm
+    endif
 endfunction
 
 "
