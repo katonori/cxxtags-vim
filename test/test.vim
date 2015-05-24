@@ -38,8 +38,8 @@ function! s:init()
     "
     call add(s:inDatasRef, { 'line':8, 'col':18 })
     let l:tmpList = []
-    call add(l:tmpList, l:fileName . "|77 col 12| parent.response();")
     call add(l:tmpList, l:fileName . "|68 col 8| a->response();")
+    call add(l:tmpList, l:fileName . "|77 col 12| parent.response();")
     call add(s:refDatasRef, l:tmpList)
     let l:tmpList = []
     call add(l:tmpList, { 'line':68, 'col':8 })
@@ -69,8 +69,8 @@ function! s:init()
 
     call add(s:inDatasOverride, { 'line':62, 'col':14 })
     let l:tmpList = []
-    call add(l:tmpList, l:fileName . "|8 col 18| virtual void response(void);")
     "call add(l:tmpList, l:fileName . ":11,16:void CParent0::response(void) {")
+    call add(l:tmpList, l:fileName . "|8 col 18| virtual void response(void);")
     call add(l:tmpList, l:fileName . "|20 col 18| virtual void response(void);")
     "call add(l:tmpList, l:fileName . ":23,16:void CParent1::response(void) {")
     call add(s:refDatasOverride, l:tmpList)
@@ -86,10 +86,10 @@ function! s:init()
     "
     call add(s:inDatasOverrideN, { 'line':8, 'col':18 })
     let l:tmpList = []
+    call add(l:tmpList, l:fileName . "|62 col 14| void COther::response(void) {")
+    call add(l:tmpList, l:fileName . "|59 col 18| virtual void response(void);")
     call add(l:tmpList, l:fileName . "|33 col 18| virtual void response(void);")
     call add(l:tmpList, l:fileName . "|36 col 14| void CChild::response(void) {")
-    call add(l:tmpList, l:fileName . "|59 col 18| virtual void response(void);")
-    call add(l:tmpList, l:fileName . "|62 col 14| void COther::response(void) {")
     call add(s:refDatasOverrideN, l:tmpList)
     let l:tmpList = []
     call add(l:tmpList, { 'line':33, 'col':18 })
@@ -100,6 +100,7 @@ function! s:init()
 
     call add(s:inDatasOverrideN, { 'line':78, 'col':11 })
     let l:tmpList = []
+    call add(l:tmpList, l:fileName . "|8 col 18| virtual void response(void);")
     call add(l:tmpList, l:fileName . "|46 col 18| virtual void response(void);")
     call add(l:tmpList, l:fileName . "|49 col 15| void CGChild::response(void) {")
     call add(s:refDatasOverrideN, l:tmpList)

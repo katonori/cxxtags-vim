@@ -202,24 +202,7 @@ function! cxxtags#JumpToDefinition()
     call s:jumpToTag("def", "Definition")
 endfunction
 
-"
-" decide the number of digits to print.
-"
-function! s:getDigits(val)
-    let l:digits = 2
-    let l:inVal = str2nr(a:val, 10)
-    if l:inVal >= 10000
-        let l:digits = 6
-    elseif l:inVal >= 100
-        let l:digits = 4
-    endif
-    return l:digits
-endfunction
-
 function! s:parseResult(resultList)
-    let l:maxFileNameLen = 0
-    let l:maxLineNoLen = 0
-    let l:maxColNoLen = 0
     let l:fileList = []
     let l:lineNoList = []
     let l:colNoList = []
@@ -231,20 +214,6 @@ function! s:parseResult(resultList)
         let l:lineBuf = readfile(l:columns[s:COL_FILE_NAME])
         let l:lineOfSrc = l:lineBuf[l:columns[s:COL_LINE_NO]-1]
 
-        " keep the max number for printing
-        let l:len = strlen(l:columns[s:COL_FILE_NAME])
-        if l:len > l:maxFileNameLen
-            let l:maxFileNameLen = l:len
-        endif
-        let l:len = str2nr(l:columns[s:COL_LINE_NO], 10)
-        if l:len > l:maxLineNoLen
-            let l:maxLineNoLen = l:len
-        endif
-        let l:len = str2nr(l:columns[s:COL_COL_NO], 10)
-        if l:len > l:maxColNoLen
-            let l:maxColNoLen = l:len
-        endif
-
         call add(l:fileList, l:columns[s:COL_FILE_NAME])
         call add(l:lineNoList, l:columns[s:COL_LINE_NO])
         call add(l:colNoList, l:columns[s:COL_COL_NO])
@@ -252,8 +221,6 @@ function! s:parseResult(resultList)
     endfor
     let l:msg = []
     let l:msgLine = ""
-    let l:lineDigits = s:getDigits(l:maxLineNoLen)
-    let l:colDigits = s:getDigits(l:maxColNoLen)
     let l:i = 0
     while l:i < len(l:fileList)
         let l:msgLine = printf("%s:%d:%d:%s", l:fileList[i], l:lineNoList[i], l:colNoList[i], l:lineOfSrcList[i])
