@@ -204,37 +204,17 @@ function! cxxtags#JumpToDefinition()
 endfunction
 
 function! s:parseResult(resultList)
-    let l:fileList = []
-    let l:lineNoList = []
-    let l:colNoList = []
-    let l:lineOfSrcList = []
-
-    for l:result in a:resultList
-        let l:columns = split(l:result, "|", 1)
-        " get a line from a source file
-        let l:lineBuf = readfile(l:columns[s:COL_FILE_NAME])
-        let l:lineOfSrc = l:lineBuf[l:columns[s:COL_LINE_NO]-1]
-
-        call add(l:fileList, l:columns[s:COL_FILE_NAME])
-        call add(l:lineNoList, l:columns[s:COL_LINE_NO])
-        call add(l:colNoList, l:columns[s:COL_COL_NO])
-        call add(l:lineOfSrcList, l:lineOfSrc)
-    endfor
     let l:msg = []
-    let l:msgLine = ""
-    let l:i = 0
-    while l:i < len(l:fileList)
-        let l:msgLine = printf("%s:%d:%d:%s", l:fileList[i], l:lineNoList[i], l:colNoList[i], l:lineOfSrcList[i])
-        call add(l:msg, substitute(l:msgLine, "\n", "", "g"))
-        let i += 1
-    endwhile
+    for l:result in a:resultList
+        call add(l:msg, substitute(l:result, '^[^|]\+|', '', 'g'))
+    endfor
     return l:msg
 endfunction
 
 function! s:openQuickFix(resRows)
     if len(a:resRows) != 0
         let l:tmp_efm = &efm
-        let &efm="%f:%l:%c:%m"
+        let &efm="%f|%l|%c|%m"
         cexpr a:resRows
         copen
         let &efm=l:tmp_efm
