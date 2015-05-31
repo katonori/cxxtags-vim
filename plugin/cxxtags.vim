@@ -23,6 +23,11 @@
 " ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 " DAMAGE.
 
+if exists("g:CXXTAGS_Inited")
+    exit
+endif
+let g:CXXTAGS_Inited = 1
+
 "
 " variable declarations which configure the behavior of this script
 "
@@ -37,6 +42,10 @@ call s:setInitValueStr("g:CXXTAGS_DatabaseDir", "_db")
 if !exists("g:CXXTAGS_Debug")
     let g:CXXTAGS_Debug = 0
 endif
+if !exists("g:CXXTAGS_UseNeomake")
+    let g:CXXTAGS_UseNeomake = 0
+endif
+
 
 "
 " commands
@@ -61,6 +70,30 @@ let s:COL_TYPE_KIND = 4
 " submit update command to condor
 "
 function! cxxtags#submitUpdateDbFile()
+    if g:CXXTAGS_UseNeomake != 0
+        call cxxtags#submitUpdateDbFileNeomake()
+    else
+        call cxxtags#submitUpdateDbFileHtcondor()
+    endif
+endfunction
+
+"
+" submit update command to NeomakeSh
+"
+function! cxxtags#submitUpdateDbFileNeomake()
+    call s:getCurPos()
+    let l:cmd = g:CXXTAGS_Cmd . " -v rebuild " . g:CXXTAGS_DatabaseDir . " " . s:curSrcFilename
+    if g:CXXTAGS_Debug != 0
+        echo l:cmd
+    endif
+    let l:cmd = ":NeomakeSh " . l:cmd
+    execute(l:cmd)
+endfunction
+
+"
+" submit update command to condor
+"
+function! cxxtags#submitUpdateDbFileHtcondor()
     call s:getCurPos()
     let l:cmd_file = tempname()
     let l:job_file = tempname()
@@ -184,8 +217,7 @@ function! s:jumpToTag(table, kind)
         call cursor(l:row[s:COL_LINE_NO], l:row[s:COL_COL_NO])
         execute ":normal zz"
     else
-        let l:resRows = s:parseResult(l:resultList)
-        call s:openQuickFix(l:resRows)
+        call s:openQuickFix(l:resultList)
     endif
 endfunction
 
@@ -203,18 +235,10 @@ function! cxxtags#JumpToDefinition()
     call s:jumpToTag("def", "Definition")
 endfunction
 
-function! s:parseResult(resultList)
-    let l:msg = []
-    for l:result in a:resultList
-        call add(l:msg, substitute(l:result, '^[^|]\+|', '', 'g'))
-    endfor
-    return l:msg
-endfunction
-
 function! s:openQuickFix(resRows)
     if len(a:resRows) != 0
         let l:tmp_efm = &efm
-        let &efm="%f|%l|%c|%m"
+        let &efm="%.%#|%f|%l|%c|%m"
         cexpr a:resRows
         copen
         let &efm=l:tmp_efm
@@ -235,18 +259,27 @@ function! cxxtags#PrintAllResults(table, kind)
     if g:CXXTAGS_Debug != 0
         echo l:cmd
     endif
-    let l:resultList = split(system(l:cmd), "\n")
-    if v:shell_error != 0
-        echo "ERROR: command execution failed.: " . l:cmd
-        return
-    endif
 
-    let l:resRows = s:parseResult(l:resultList)
-    if len(l:resRows) == 0
-        echo "No " . a:kind . " are found.: " . s:curWord
-        cexpr ""
+    if g:CXXTAGS_UseNeomake != 0
+        let l:tmp_efm = &efm
+        let &efm="%.%#|%f|%l|%c|%m"
+        let l:cmd = ":NeomakeSh " . l:cmd
+        execute(l:cmd)
+        copen
+        wincmd p
+        let &efm=l:tmp_efm
+    else
+        let l:resultList = split(system(l:cmd), "\n")
+        if v:shell_error != 0
+            echo "ERROR: command execution failed.: " . l:cmd
+            return
+        endif
+        if len(l:resultList) == 0
+            echo "No " . a:kind . " are found.: " . s:curWord
+            cexpr ""
+        endif
+        call s:openQuickFix(l:resultList)
     endif
-    call s:openQuickFix(l:resRows)
 endfunction
 
 "
